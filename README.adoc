@@ -1,0 +1,56 @@
+= 2020
+:toc:
+:stem: latexmath
+
+[CAUTION]
+====
+Není dovoleno používat knihovny, které za vás vyřeší většinu problému, např. constraint solvery pro sudoku.
+Pokud si nejste jisti, zeptejte se svého cvičícího.
+====
+
+== Témata prací
+
+Semestrální projekty jsou zadány pouze rámcově.
+Zadáno je nezbytné minimum, které váš projekt musí splňovat, aby byl přijat.
+*Vaší invenci se meze nekladou, rozšíření jsou vítána.*
+
+V průběhu semestru mohou být dodány doplňující informace pro jednotlivá témata.
+
+[[vyhodnocovac]]
+=== Vyhodnocovač λ-kalkulu
+
+Implementujte vyhodnocovač λ-výrazů v jazyce, který si vyberete (*velmi* však doporučujeme využít LISP).
+Vyhodnocovač musí podporovat
+
+. načítání λ-výrazů uživatelem,
+. postup vyhodnocování krok za krokem podle pravidel z přednášek.
+
+Vyhodnocovač musí rozumět alespoň základnímu λ-kalkulu podle definic v tomto předmětu.
+
+Co se týče funkčnosti, měli byste být schopni spočítat alespoň faktoriál pěti (nebo obdobně složitý výraz), tedy `++ Y (λfn. zero n 1 (* n f (- n 1))) 5 ++`.
+Symbolické názvy nejsou vyžadovány. Pokud je neimpementujete, pak je v příkladu výše nahraďte lambda funkcemi.
+
+Musíte umět vyhodnotit výraz v normálním pořadí krok za krokem. Symbolické názvy (`zero`, `Y`, `1`, ...) při vyhodnocení plně rozepsat .
+
+[[secd-compiler]]
+=== Překladač podmnožiny LISPu do SECD
+V libovolném jazyce implementujte překladač z podmnožiny LISPu do SECD kódu.
+
+[[secd-vm]]
+=== SECD Virtual Machine
+
+V libovolném jazyce implementujte SECD virtuální stroj.
+Váš program bude umět spouštět a vyhodnocovat programy v SECD kódu.
+
+[[adventura]]
+=== Textová adventura v prologu
+
+V Prologu implementujte xref:../2017/adventura.adoc#[textovou adventuru], která podporuje inventář postavy, nepřátele, mapy, apod.
+**! Bodové ohodnocení uvedené pod odkazem letos neplatí. !**
+
+[[sudoku]]
+=== Sudoku solver
+Napište sudoku solver. Na vstupu dostanete hrací desku. Vaším úkolem je vyplnit Sudoku, pokud řešení existuje.
+Velikost hrací desky není omezená (stem:[\{n^2 \text{ * } n^2 \mid n \ge 1\}]).
+
+Jazyk vaší implementace není omezený, *velmi* však doporučujeme využít Prolog.
