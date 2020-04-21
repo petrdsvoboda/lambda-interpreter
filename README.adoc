@@ -1,4 +1,4 @@
-= CLI Vyhodnocovač λ-kalkulu
+= Haskell CLI Vyhodnocovač λ-kalkulu
 :toc:
 :stem: latexmath
 
