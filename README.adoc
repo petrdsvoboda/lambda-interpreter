@@ -23,3 +23,18 @@ Implement CLI:
 * starting up cli will open enviroment for user input,
 * each line either assignment of expression to symbolic name or application
 
+Example:
+
+```
+user@pc > lci
+> 1 = (λs.(λz. (s z)))
+> 1
+(λs.(λz. (s z)))
+> add = (λx.(λy.(λs.(λz. x s (y s z)))))
+> add 1 1
+(λx.(λy.(λs.(λz. x s (y s z))))) (λs.(λz. (s z))) (λs.(λz. (s z)))
+(λy.(λs.(λz. (λs.(λz. (s z))) s (y s z)))) (λs.(λz. (s z)))
+(λs.(λz. (λs.(λz. (s z))) s ((λs.(λz. (s z))) s z))
+...
+(λs.(λz. (s (s z))))
+```
