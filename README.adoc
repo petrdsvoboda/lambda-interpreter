@@ -1,17 +1,23 @@
-= Haskell CLI Vyhodnocovač λ-kalkulu
+= Haskell CLI λ-calculus interpreter
 :toc:
 :stem: latexmath
 
-Implementujte vyhodnocovač λ-výrazů.
-Vyhodnocovač musí podporovat
+Implement λ-calculus interpreter supporting:
 
-. načítání λ-výrazů uživatelem,
-. postup vyhodnocování krok za krokem podle pravidel z přednášek.
+. loading of λ-expressions by user,
+. order of evaluation step by step (application of one reduction)
 
-Vyhodnocovač musí rozumět alespoň základnímu λ-kalkulu podle definic v tomto předmětu.
+Interpreter has to understand basics of λ-calcul:
+. encapsulation, abstraction, application
+. free and bound variables
+. beta reduction
+. eta reduction
+. normal order reduction and normal form (no further reductions possible)
 
-Co se týče funkčnosti, měli byste být schopni spočítat alespoň faktoriál pěti (nebo obdobně složitý výraz), tedy `++ Y (λfn. zero n 1 (* n f (- n 1))) 5 ++`.
-Symbolické názvy nejsou vyžadovány. Pokud je neimpementujete, pak je v příkladu výše nahraďte lambda funkcemi.
+It has to be able to solve at least factorial of 5 or similiarly difficult expression (`++ Y (λfn. zero n 1 (* n f (- n 1))) 5 ++`).
+Support interpreting step-by-step (one application of reduction) and expansion of symbolic names  (`zero`, `Y`, `1`, ...).
 
-Musíte umět vyhodnotit výraz v normálním pořadí krok za krokem. Symbolické názvy (`zero`, `Y`, `1`, ...) při vyhodnocení plně rozepsat .
+Implement CLI:
+. starting up cli will open enviroment for user input,
+. each line either assignment of expression to symbolic name or application
 
