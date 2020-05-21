@@ -8,13 +8,16 @@ import           Chars
 import           Types
 
 getBlock :: (Int, String, [String]) -> Char -> (Int, String, [String])
-getBlock (d, expr, bs) c
-    | isCBegin c && d == 0 && expr == "" = (d + 1, expr, bs)
-    | isCBegin c && d == 0               = (d + 1, "", bs ++ [expr])
-    | isCBegin c                         = (d + 1, expr ++ [c], bs)
-    | isCEnd c && d == 1                 = (d - 1, "", bs ++ [expr])
-    | isCEnd c                           = (d - 1, expr ++ [c], bs)
-    | otherwise                          = (d, expr ++ [c], bs)
+getBlock (d, expr, bs) c = case c of
+    '(' -> case d of
+        0 -> case expr of
+            "" -> (d + 1, expr, bs)
+            _  -> (d + 1, "", bs ++ [expr])
+        _ -> (d + 1, expr ++ [c], bs)
+    ')' -> case d of
+        1 -> (d - 1, "", bs ++ [expr])
+        _ -> (d - 1, expr ++ [c], bs)
+    _ -> (d, expr ++ [c], bs)
 
 getBlocks :: String -> [Block]
 getBlocks text = map getSubBlocks bs

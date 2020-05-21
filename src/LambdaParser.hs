@@ -17,11 +17,11 @@ parseAbstraction :: String -> (Char, Term)
 parseAbstraction text = (head text, parseBlockText $ drop 1 text)
 
 parseBlockText :: String -> Term
-parseBlockText text = case head text of
-    lambdaChar -> Abstraction (parseAbstraction $ drop 1 text)
-    _          -> Variable (Simple 'x')
+parseBlockText text = Variable (Macro text)
 
 buildExpr :: Block -> Term
 buildExpr b = case b of
-    (BlockText text) -> parseBlockText text
-    (SubBlocks bs  ) -> Variable (Simple 'x')
+    (BlockText text                ) -> parseBlockText text
+    (SubBlocks ((BlockText b) : bs)) -> case head b of
+        '\\' -> Abstraction (b !! 1, buildExpr (SubBlocks bs))
+        _    -> Application (parseBlockText b, buildExpr (SubBlocks bs))
