@@ -5,7 +5,7 @@ data Term = Variable VarData | Abstraction (Char, Term) | Application (Term, Ter
 
 data Block = BlockText String | SubBlocks [Block]
 instance Show Block where
-    show (BlockText a) = a
-    show (SubBlocks a) = show a
+    show (BlockText text) = show text
+    show (SubBlocks bs  ) = show bs
 
 type IndexRange = (Int, Int)

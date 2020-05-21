@@ -1,9 +1,21 @@
 module Chars where
 
-bgnBlockChar :: Char
-bgnBlockChar = '('
-endBlockChar :: Char
-endBlockChar = ')'
+cBegin :: Char
+cBegin = '('
+cEnd :: Char
+cEnd = ')'
 
-lambdaChar :: Char
-lambdaChar = '\\'
+cLambda :: Char
+cLambda = '\\'
+cDot :: Char
+cDot = '.'
+
+isChar :: Char -> Char -> Bool
+isChar = (==)
+
+isCBegin = isChar cBegin
+isCEnd = isChar cEnd
+isCLambda = isChar cLambda
+isCDot = isChar cDot
+
+isCSubBlock c = isCBegin c && isCLambda c
