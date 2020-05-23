@@ -1,6 +1,6 @@
 module Main where
 
-import           Lib
+import           CLI
 
 main :: IO ()
-main = getData
+main = run

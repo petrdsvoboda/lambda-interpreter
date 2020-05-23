@@ -1,7 +1,7 @@
 module Types where
 
 data VarData = Simple Char | Macro String
-data Term = Variable VarData | Abstraction (Char, Term) | Application (Term, Term)
+data Term = Variable VarData | Abstraction (Char, Term) | Application (Term, Term) | Normal Term
 instance Show Term where
     show (Variable    (Simple c   )) = show c
     show (Variable    (Macro  text)) = show text

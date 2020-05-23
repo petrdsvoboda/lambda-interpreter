@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7989f15bea48bd0a6b94e1d865d7b33a494e1889694849d98240795fbf21431f
+-- hash: 9615f503a042cd6c923b3dcf637810b3b6b899aba78ee2739073b9661464f9a0
 
 name:           lambda-interpreter
 version:        0.1.0.0
@@ -28,6 +28,8 @@ source-repository head
 library
   exposed-modules:
       Chars
+      CLI
+      Evaluator
       LambdaParser
       Lib
       TextParser

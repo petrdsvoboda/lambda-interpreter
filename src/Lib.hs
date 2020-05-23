@@ -4,6 +4,7 @@ module Lib
   )
 where
 
+import           CLI
 import           LambdaParser
 import           TextParser
 import           Types
