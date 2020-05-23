@@ -7,6 +7,7 @@ instance Show Term where
     show (Variable    (Macro  text)) = show text
     show (Abstraction (c, t)       ) = show c ++ "\n\t" ++ show t
     show (Application (a, b)       ) = show a ++ "\n" ++ show b
+    show (Normal      t            ) = show t
 
 data Block = BlockText String | SubBlocks [Block]
 instance Show Block where

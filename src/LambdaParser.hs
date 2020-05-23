@@ -21,11 +21,11 @@ parseBlockText text = Variable (Macro text)
 
 buildExpr :: Block -> Term
 buildExpr b = case b of
-    (BlockText text      ) -> parseBlockText text
-    (SubBlocks [sb1, sb2]) -> case sb1 of
+    (BlockText text             ) -> parseBlockText text
+    (SubBlocks (sb1 : sb2 : sbs)) -> case sb1 of
         (BlockText text) -> case head text of
-            '\\' -> Abstraction (text !! 1, buildExpr sb2)
-            _    -> Application (parseBlockText text, buildExpr sb2)
-        _ -> Application (buildExpr sb1, buildExpr sb2)
-    (SubBlocks (sb : sbs)) ->
-        Application (buildExpr sb, buildExpr (SubBlocks sbs))
+            '\\' -> Abstraction (text !! 1, buildExpr (SubBlocks (sb2 : sbs)))
+            _    -> Application
+                (parseBlockText text, buildExpr (SubBlocks (sb2 : sbs)))
+        _ -> Application (buildExpr sb1, buildExpr (SubBlocks (sb2 : sbs)))
+    (SubBlocks [sb]) -> Normal (buildExpr sb)
