@@ -1,6 +1,7 @@
 module CLI where
 
 import           System.IO
+import           Evaluator
 import           LambdaParser
 import           TextParser
 
@@ -15,5 +16,5 @@ prompt = do
 run :: IO ()
 run = do
     line <- prompt
-    print . buildExpr $ getBlocks line
+    print . lambdaEval . buildExpr $ getBlocks line
     run
