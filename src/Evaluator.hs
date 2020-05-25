@@ -26,16 +26,14 @@ macros m = case m of
     "3"     -> "(\\s.(\\z.(s (s (s z)))))"
     "Y"     -> "(\\f.((\\x.(f (x x))) (\\x.(f (x x)))))"
 
-replaceVar :: Char -> Term -> Term -> Term
-replaceVar c a b = 
+replaceVar :: Char -> Term a -> Term a -> Term a
+replaceVar c a b = a
 
-lambdaEval :: Term -> Term
+lambdaEval :: Term Char -> Term Char
 lambdaEval term = case term of
-    (Variable var) -> case var of
-        (Simple v) -> Variable (Simple v)
-        (Macro  m) -> buildExpr . getBlocks $ macros m
-    (Abstraction (v, t)) -> Variable (Simple 'v')
-    (Application (a, b)) -> case a of
-        (Abstraction (v, t)) -> replaceVar v t b
-    (Normal      t     ) -> lambdaEval t
-    (Empty) -> Empty
+    Empty              -> Empty
+    Variable    v      -> Variable v
+    Macro       m      -> buildExpr . getBlocks $ macros m
+    Abstraction (v, t) -> Variable v
+    Application (a, b) -> case a of
+        Abstraction (v, t) -> replaceVar v t b

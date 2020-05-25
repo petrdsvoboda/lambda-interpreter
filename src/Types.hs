@@ -1,32 +1,49 @@
 module Types where
 
-data VarData  = Simple Char | Macro String
-data Term  = Variable VarData | Abstraction (Char, Term) | Application (Term, Term) | Normal Term | Empty
-instance Show Term where
-    show (Variable    (Simple v   )) = show v
-    show (Variable    (Macro  text)) = text
-    show (Abstraction (v, t)       ) = "\\" ++ show v ++ "." ++ show t
-    show (Application (a, b)       ) = "(" ++ show a ++ ")(" ++ show b ++ ")"
-    show (Normal      t            ) = "(" ++ show t ++ ")"
-    show Empty                       = ""
+data Term a  = Empty | Variable a | Macro String | Abstraction (a, Term a) | Application (Term a, Term a)
+instance Show a => Show (Term a) where
+    show (Variable    v     ) = "(" ++ show v ++ ")"
+    show (Macro       text  ) = text
+    show (Abstraction (v, t)) = "(\\" ++ show v ++ "." ++ show t ++ ")"
+    show (Application (a, b)) = show a ++ show b
+    show Empty                = ""
 
-instance Semigroup Term where
+instance Semigroup (Term a) where
     (<>) a     Empty = a
     (<>) Empty b     = b
     (<>) a     b     = Application (a, b)
 
-instance Monoid Term where
+instance Monoid (Term a) where
     mempty  = Empty
     mappend = (<>)
 
-instance Foldable Term where
-    foldMap f x = case x of
-        Empty                    -> Empty
-        (Normal      t         ) -> fmap f t
-        (Application (a, b)    ) -> Application (fmap f a, fmap f b)
-        (Abstraction (v, t)    ) -> Abstraction (f v, fmap f t)
-        (Variable    (Simple v)) -> Variable (Simple (f v))
-        (Variable    (Macro  m)) -> Variable (Macro m)
+instance Functor Term where
+    fmap f x = case x of
+        Empty                -> Empty
+        (Macro       m     ) -> Macro m
+        (Variable    v     ) -> Variable (f v)
+        (Application (a, b)) -> Application (fmap f a, fmap f b)
+        (Abstraction (v, t)) -> Abstraction (f v, fmap f t)
+
+instance Applicative Term where
+    pure = Variable
+    (<*>) _  Empty = Empty
+    (<*>) ft xs    = case ft of
+        Empty              -> Empty
+        Macro       m      -> Macro m
+        Variable    f      -> fmap f xs
+        Application (a, b) -> Application (a <*> xs, b <*> xs)
+        Abstraction (v, t) -> t <*> xs
+
+
+instance Monad Term where
+    (>>=) Empty f = Empty
+    (>>=) x     f = case x of
+        Empty                -> Empty
+        (Macro       m     ) -> Macro m
+        (Variable    v     ) -> f v
+        (Application (a, b)) -> Application (a >>= f, b >>= f)
+        (Abstraction (v, t)) -> t >>= f
 
 
 data Block = BlockText String | SubBlocks [Block]
