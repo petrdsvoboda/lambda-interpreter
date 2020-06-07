@@ -1,12 +1,13 @@
 module Lib
   ( getData
   , getExpr
+  , expr
   )
 where
 
 import           CLI
 import           LambdaParser
-import           TextParser
+import           Lexer
 import           Types
 
 expr :: String

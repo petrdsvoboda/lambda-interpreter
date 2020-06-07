@@ -6,7 +6,7 @@ where
 import           Chars
 import           Types
 import           LambdaParser
-import           TextParser
+import           Lexer
 
 macros :: String -> String
 macros m = case m of

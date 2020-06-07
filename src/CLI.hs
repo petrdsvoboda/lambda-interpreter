@@ -3,7 +3,7 @@ module CLI where
 import           System.IO
 import           Evaluator
 import           LambdaParser
-import           TextParser
+import           Lexer
 
 -- | Prompts text and allows answer on same line
 prompt :: IO String

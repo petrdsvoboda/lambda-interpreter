@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9615f503a042cd6c923b3dcf637810b3b6b899aba78ee2739073b9661464f9a0
+-- hash: eac5db76a37af516767a56f1a9dc9672431db10bf642c599dfc54070cc5df598
 
 name:           lambda-interpreter
 version:        0.1.0.0
@@ -31,8 +31,8 @@ library
       CLI
       Evaluator
       LambdaParser
+      Lexer
       Lib
-      TextParser
       Types
   other-modules:
       Paths_lambda_interpreter
@@ -40,6 +40,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 executable lambda-interpreter-exe
@@ -51,6 +52,7 @@ executable lambda-interpreter-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , lambda-interpreter
   default-language: Haskell2010
 
@@ -64,5 +66,6 @@ test-suite lambda-interpreter-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , lambda-interpreter
   default-language: Haskell2010
