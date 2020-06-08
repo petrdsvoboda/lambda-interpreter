@@ -13,8 +13,8 @@ tokenMap :: Map.Map Char Token
 tokenMap = Map.fromList
     [ ('(' , Separator Begin)
     , (')' , Separator End)
-    , ('.' , Separator EndFn)
     , ('\\', Keyword Fn)
+    , ('.' , Keyword EndFn)
     ]
 
 charsSplit = ['(', ')', '.', '\\']
@@ -32,7 +32,7 @@ tokenize text = case id of
             Just x  -> (Nothing, tokens ++ [Identifier x, tokenMap Map.! curr])
         | curr `elem` charsWhitespace = case prev of
             Nothing -> (Nothing, tokens)
-            Just x  -> (Nothing, [Identifier x])
+            Just x  -> (Nothing, tokens ++ [Identifier x])
         | otherwise = case prev of
             Nothing -> (Just [curr], tokens)
             Just x  -> (Just (x ++ [curr]), tokens)

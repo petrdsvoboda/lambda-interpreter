@@ -1,19 +1,20 @@
  {-# LANGUAGE FlexibleInstances #-}
 module Types where
 
-data SeparatorToken = Begin | End | EndFn
-data KeywordToken = Fn
+data SeparatorToken = Begin | End
+data KeywordToken = Fn | EndFn
 data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken
 
 instance Show Token where
-    show (Identifier x  ) = x
+    show (Identifier x  ) = "ID~" ++ x
     show (Separator  sep) = case sep of
-        Begin -> "("
-        End   -> ")"
-        EndFn -> "."
-    show (Keyword _) = "\\"
+        Begin -> "S("
+        End   -> "S)"
+    show (Keyword key) = case key of
+        Fn    -> "K\\"
+        EndFn -> "K."
 instance {-# OVERLAPPING #-} Show [Token] where
-    show = foldl (\acc curr -> acc ++ show curr) ""
+    show = foldl (\acc curr -> acc ++ " " ++ show curr) ""
 
 data Term a  = Empty | Variable a | Macro String | Abstraction (a, Term a) | Application (Term a, Term a)
 instance Show a => Show (Term a) where
