@@ -1,9 +1,9 @@
  {-# LANGUAGE FlexibleInstances #-}
 module Types where
 
-data SeparatorToken = Begin | End
-data KeywordToken = Fn | EndFn
-data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken
+data SeparatorToken = Begin | End deriving (Eq)
+data KeywordToken = Fn | EndFn deriving (Eq)
+data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken deriving (Eq)
 
 instance Show Token where
     show (Identifier x  ) = "ID~" ++ x
