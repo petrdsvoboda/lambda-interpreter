@@ -26,10 +26,10 @@ macros m = case m of
     "3"     -> "(\\s.(\\z.(s (s (s z)))))"
     "Y"     -> "(\\f.((\\x.(f (x x))) (\\x.(f (x x)))))"
 
-replaceVar :: Char -> Term a -> Term a -> Term a
+replaceVar :: String -> Term -> Term -> Term
 replaceVar c a b = a
 
-lambdaEval :: Term Char -> Term Char
+lambdaEval :: Term -> Term
 lambdaEval term = case term of
     Empty              -> Empty
     Variable    v      -> Variable v
