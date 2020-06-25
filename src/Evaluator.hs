@@ -31,9 +31,8 @@ replaceVar c a b = a
 
 lambdaEval :: Term -> Term
 lambdaEval term = case term of
-    Empty              -> Empty
-    Variable    v      -> Variable v
-    Macro       m      -> buildExpr . getBlocks $ macros m
-    Abstraction (v, t) -> Variable v
+    Macro       m      -> parseTree . tokenize $ macros m
     Application (a, b) -> case a of
-        Abstraction (v, t) -> replaceVar v t b
+        Abstraction (v, t) -> Abstraction (v, t)
+        _                  -> Application (lambdaEval a, lambdaEval b)
+    _ -> term
