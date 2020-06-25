@@ -1,6 +1,5 @@
 module LambdaParser
-    ( buildExpr
-    , parseTree
+    ( parseTree
     )
 where
 
@@ -10,21 +9,6 @@ import qualified Data.Stack                    as Stack
 import           Chars
 import           Types
 
-parseAbstraction :: String -> (Char, Term)
-parseAbstraction text = (head text, parseBlockText $ drop 1 text)
-
-parseBlockText :: String -> Term
-parseBlockText text = Macro text
-
-buildExpr :: Block -> Term
-buildExpr b = case b of
-    (BlockText text      ) -> parseBlockText text
-    (SubBlocks (sb : sbs)) -> case sb of
-        (BlockText text) -> case head text of
-            '\\' -> Abstraction (text, buildExpr (SubBlocks sbs))
-            _    -> Application (parseBlockText text, buildExpr (SubBlocks sbs))
-        _ -> Application (buildExpr sb, buildExpr (SubBlocks sbs))
-    (SubBlocks []) -> Empty
 
 parseVar :: String -> Term
 parseVar text = if Char.isLower $ head text then Variable text else Macro text

@@ -1,5 +1,6 @@
 module Evaluator
     ( lambdaEval
+    , expandMacros
     )
 where
 
@@ -26,13 +27,26 @@ macros m = case m of
     "3"     -> "(\\s.(\\z.(s (s (s z)))))"
     "Y"     -> "(\\f.((\\x.(f (x x))) (\\x.(f (x x)))))"
 
-replaceVar :: String -> Term -> Term -> Term
-replaceVar c a b = a
+betaReduction :: String -> Term -> Term -> Term
+betaReduction name term arg = case term of
+    Variable x -> if x == name then arg else term
+    Application (a, b) ->
+        Application (betaReduction name a arg, betaReduction name b arg)
+    Abstraction (v, t) ->
+        if v == name then term else Abstraction (v, betaReduction name t arg)
+    _ -> term
+
+expandMacros :: Term -> Term
+expandMacros term = case term of
+    Macro       m      -> parseTree . tokenize $ macros m
+    Abstraction (v, t) -> Abstraction (v, expandMacros t)
+    Application (a, b) -> Application (expandMacros a, expandMacros b)
+    _                  -> term
+
 
 lambdaEval :: Term -> Term
-lambdaEval term = case term of
-    Macro       m      -> parseTree . tokenize $ macros m
+lambdaEval term = case expandMacros term of
     Application (a, b) -> case a of
-        Abstraction (v, t) -> Abstraction (v, t)
+        Abstraction (v, t) -> betaReduction v t b
         _                  -> Application (lambdaEval a, lambdaEval b)
     _ -> term

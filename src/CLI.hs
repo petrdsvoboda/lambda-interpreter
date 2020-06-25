@@ -16,5 +16,5 @@ prompt = do
 run :: IO ()
 run = do
     line <- prompt
-    print . lambdaEval . buildExpr $ getBlocks line
+    print . lambdaEval . parseTree $ tokenize line
     run

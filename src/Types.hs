@@ -18,10 +18,10 @@ instance {-# OVERLAPPING #-} Show [Token] where
 
 data Term = Empty | Variable String | Macro String | Abstraction (String, Term) | Application (Term, Term) deriving (Eq)
 instance Show Term where
-    show (Variable    v     ) = "var_" ++ v
-    show (Macro       text  ) = "mac_" ++ text
+    show (Variable    v     ) = v
+    show (Macro       text  ) = text
     show (Abstraction (v, t)) = "(\\" ++ v ++ "." ++ show t ++ ")"
-    show (Application (a, b)) = "(" ++ show a ++ ")(" ++ show b ++ ")"
+    show (Application (a, b)) = show a ++ " " ++ show b
     show Empty                = ""
 
 -- instance Semigroup (Term a) where

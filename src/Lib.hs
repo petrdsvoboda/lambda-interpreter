@@ -1,7 +1,5 @@
 module Lib
-  ( getData
-  , getExpr
-  , expr
+  ( expr
   )
 where
 
@@ -16,5 +14,3 @@ expr = "((\\x.(\\y.(x+y+(\\z.(z))(1))))(2))(3)"
 printBlocks :: [Block] -> IO ()
 printBlocks = mapM_ print
 
-getData = print $ getBlocks expr
-getExpr = print . buildExpr $ getBlocks expr
