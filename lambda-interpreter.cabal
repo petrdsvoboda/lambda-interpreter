@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1620282f78805ea124bcd8e5bfd275d302ca0d3ca98b2d82c8715cb1bc0d214f
+-- hash: a90744cf951f693e9b3285a2933dd9b5945c0fa42c0dc3b8f72bdc40453f9ad8
 
 name:           lambda-interpreter
 version:        0.1.0.0
@@ -31,9 +31,10 @@ library
       CLI
       Data.Stack
       Evaluator
-      LambdaParser
       Lexer
       Lib
+      Macro
+      Parser
       Types
   other-modules:
       Paths_lambda_interpreter

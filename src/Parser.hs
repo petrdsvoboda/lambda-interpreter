@@ -1,5 +1,7 @@
-module LambdaParser
+module Parser
     ( parseTree
+    , fromString
+    , toString
     )
 where
 
@@ -8,6 +10,8 @@ import qualified Data.Char                     as Char
 import qualified Data.Stack                    as Stack
 import           Chars
 import           Types
+import           Lexer
+import           Macro
 
 
 parseVar :: String -> Term
@@ -35,10 +39,9 @@ parseTree tokens = term
         next = case term == Empty of
             True  -> prev
             False -> case List.null fnVar of
-                True  -> prev { term = apply termPrev term }
-                False -> prev
-                    { term = apply termPrev $ Abstraction (head fnVar, term)
-                    }
+                True -> prev { term = termPrev <> term }
+                False ->
+                    prev { term = termPrev <> Abstraction (head fnVar, term) }
     parseToken :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     parseToken stack token = Stack.push stackItem (Stack.pop stack)
       where
@@ -47,17 +50,23 @@ parseTree tokens = term
         stackItem = case token of
             Identifier x -> case inFn of
                 True  -> curr { fnVar = fnVar ++ [x] }
-                False -> curr { term = apply term var }
+                False -> curr { term = term <> var }
                 where var = parseVar x
             Keyword key -> case key of
                 Fn    -> curr { isFn = True, inFn = True }
                 EndFn -> curr { inFn = False }
             _ -> curr
 
-    apply :: Term -> Term -> Term
-    apply a b = if a == Empty then b else Application (a, b)
     parse :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     parse stack token =
         expandStack (parseToken (consolidateStack stack token) token) token
     stack                     = foldl parse (Stack.fromList [emptyItem]) tokens
     StackItem { term = term } = Stack.top stack
+
+fromString :: String -> Term
+fromString = parseTree . tokenize
+
+toString :: Term -> String
+toString term = case lookupId $ show term of
+    Just x  -> x
+    Nothing -> show term

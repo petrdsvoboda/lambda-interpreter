@@ -16,7 +16,7 @@ instance Show Token where
 instance {-# OVERLAPPING #-} Show [Token] where
     show = foldl (\acc curr -> acc ++ " " ++ show curr) ""
 
-data Term = Empty | Variable String | Macro String | Abstraction (String, Term) | Application (Term, Term) deriving (Eq)
+data Term  = Empty | Variable String | Macro String | Abstraction (String, Term ) | Application (Term, Term) deriving (Eq)
 instance Show Term where
     show (Variable    v     ) = v
     show (Macro       text  ) = text
@@ -24,22 +24,27 @@ instance Show Term where
     show (Application (a, b)) = show a ++ " " ++ show b
     show Empty                = ""
 
--- instance Semigroup (Term a) where
---     (<>) a     Empty = a
---     (<>) Empty b     = b
---     (<>) a     b     = Application (a, b)
+instance Semigroup Term where
+    (<>) a     Empty = a
+    (<>) Empty b     = b
+    (<>) a     b     = Application (a, b)
 
--- instance Monoid (Term a) where
---     mempty  = Empty
---     mappend = (<>)
+instance Monoid Term where
+    mempty  = Empty
+    mappend = (<>)
+
+-- instance Foldable Term where
+--     foldMap f Empty                   = mempty
+--     foldMap f (  Application (a, b )) = foldMap f a <> foldMap f b
+--     foldMap f t@(Abstraction (v, t2)) = foldMap f a <> foldMap f b
+--     foldMap f t                       = f t
 
 -- instance Functor Term where
 --     fmap f x = case x of
 --         Empty                -> Empty
---         (Macro       m     ) -> Macro m
 --         (Variable    v     ) -> Variable (f v)
---         (Application (a, b)) -> Application (fmap f a, fmap f b)
---         (Abstraction (v, t)) -> Abstraction (f v, fmap f t)
+--         (Application (a, b)) -> fmap f a <> fmap f b
+--         t                    -> f t
 
 -- instance Applicative Term where
 --     pure = Variable
