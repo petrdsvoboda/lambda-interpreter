@@ -16,18 +16,23 @@ instance Show Token where
 instance {-# OVERLAPPING #-} Show [Token] where
     show = foldl (\acc curr -> acc ++ " " ++ show curr) ""
 
-data Term  = Empty | Variable String | Macro String | Abstraction (String, Term ) | Application (Term, Term) deriving (Eq)
+data Term  = Empty | Variable String | Macro String | Abstraction (String, Term ) | Application [Term] deriving (Eq)
 instance Show Term where
     show (Variable    v     ) = v
     show (Macro       text  ) = text
     show (Abstraction (v, t)) = "(\\" ++ v ++ "." ++ show t ++ ")"
-    show (Application (a, b)) = show a ++ " " ++ show b
+    show (Application ts    ) = unwords $ map show ts
     show Empty                = ""
 
 instance Semigroup Term where
-    (<>) a     Empty = a
-    (<>) Empty b     = b
-    (<>) a     b     = Application (a, b)
+    (<>) a                Empty            = a
+    (<>) Empty            b                = b
+    (<>) (Application as) (Application bs) = Application (as ++ bs)
+    (<>) (Application as) b                = Application (as ++ [b])
+    (<>) a                (Application bs) = Application (a : bs)
+    (<>) a                b                = Application [a, b]
+
+
 
 instance Monoid Term where
     mempty  = Empty

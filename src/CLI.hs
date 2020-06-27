@@ -26,12 +26,9 @@ answer term = putStrLn $ "< " ++ toString term
 
 compute :: Term -> IO Term
 compute term = do
+    CLI.log term
     let evaluated = eval term
-    if (evaluated == term)
-        then return evaluated
-        else do
-            CLI.log evaluated
-            compute evaluated
+    if (evaluated == term) then return evaluated else compute evaluated
 
 run :: IO ()
 run = do
