@@ -21,8 +21,13 @@ instance Show Term where
     show (Variable    v     ) = v
     show (Macro       text  ) = text
     show (Abstraction (v, t)) = "(\\" ++ v ++ "." ++ show t ++ ")"
-    show (Application ts    ) = unwords $ map show ts
-    show Empty                = ""
+    show (Application ts    ) = unwords $ map encapsulate ts
+      where
+        encapsulate :: Term -> String
+        encapsulate t = case t of
+            (Application ts) -> "(" ++ show (Application ts) ++ ")"
+            _                -> show t
+    show Empty = ""
 
 instance Semigroup Term where
     (<>) a                Empty            = a

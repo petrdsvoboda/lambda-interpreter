@@ -39,7 +39,7 @@ parseTree tokens = term
         next = case term == Empty of
             True  -> prev
             False -> case List.null fnVar of
-                True -> prev { term = termPrev <> term }
+                True -> prev { term = termPrev <> Application [term] }
                 False ->
                     prev { term = termPrev <> Abstraction (head fnVar, term) }
     parseToken :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
