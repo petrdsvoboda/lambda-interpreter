@@ -39,9 +39,8 @@ parseTree tokens = term
         next = case term == Empty of
             True  -> prev
             False -> case List.null fnVar of
-                True -> prev { term = termPrev <> Application [term] }
-                False ->
-                    prev { term = termPrev <> Abstraction (head fnVar, term) }
+                True  -> prev { term = termPrev <> Application [term] }
+                False -> prev { term = termPrev <> Abstraction (fnVar, term) }
     parseToken :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     parseToken stack token = Stack.push stackItem (Stack.pop stack)
       where
