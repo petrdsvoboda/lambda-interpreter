@@ -22,8 +22,8 @@ data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term
 emptyItem :: StackItem
 emptyItem = StackItem { isFn = False, inFn = False, fnVar = [], term = Empty }
 
-parseTree :: [Token] -> Term
-parseTree tokens = term
+parseTree :: [Token] -> Expr
+parseTree tokens = (term, assignTo)
   where
     expandStack :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     expandStack stack token
@@ -59,10 +59,16 @@ parseTree tokens = term
     parse :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     parse stack token =
         expandStack (parseToken (consolidateStack stack token) token) token
-    stack                     = foldl parse (Stack.fromList [emptyItem]) tokens
+    isAssignment = length tokens > 1 && (tokens !! 1 == (Keyword Assign))
+    id           = case head tokens of
+        Identifier x -> x
+        _            -> ""
+    termTokens                = if isAssignment then drop 2 tokens else tokens
+    stack = foldl parse (Stack.fromList [emptyItem]) termTokens
     StackItem { term = term } = Stack.top stack
+    assignTo                  = if isAssignment then Just id else Nothing
 
-fromString :: String -> Term
+fromString :: String -> Expr
 fromString = parseTree . tokenize
 
 toString :: Term -> String

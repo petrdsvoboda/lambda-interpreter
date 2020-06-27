@@ -14,10 +14,11 @@ import           Macro
 
 tmap :: (Term -> Term) -> Term -> Term
 tmap f t = case t of
-    Empty              -> Empty
-    Application ts     -> Application (map (tmap f) ts)
-    Abstraction (v, b) -> Abstraction (v, tmap f t)
-    _                  -> f t
+    Empty                   -> Empty
+    Application ([]       ) -> Empty
+    Application (term : ts) -> tmap f term <> tmap f (Application ts)
+    Abstraction (v, b)      -> Abstraction (v, tmap f t)
+    _                       -> f t
 
 -- tfold :: (Term -> Term) -> String -> Term -> Term
 -- tfold f v t = case t of
@@ -41,10 +42,10 @@ betaReduction name arg term = case term of
         else Abstraction (vs, betaReduction name arg t)
     _ -> term
 
-expandMacros :: Term -> Term
-expandMacros t = case t of
-    Macro m -> case lookupVal m of
-        Just val -> fromString val
+expandMacros :: [SavedMacro] -> Term -> Term
+expandMacros macros t = case t of
+    Macro m -> case (Macro.lookup macros m) of
+        Just val -> fst $ fromString val
         Nothing  -> Empty
     _ -> t
 

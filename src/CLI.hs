@@ -30,9 +30,13 @@ compute term = do
     let evaluated = eval term
     if (evaluated == term) then return evaluated else compute evaluated
 
-run :: IO ()
-run = do
+run :: [SavedMacro] -> IO ()
+run macros = do
     line <- prompt
-    res  <- compute . tmap expandMacros $ fromString line
+    let (term, assignTo) = fromString line
+    let macros' = case assignTo of
+            Just x  -> macros ++ [(x, line)]
+            Nothing -> macros
+    res <- compute $ tmap (expandMacros macros') term
     answer res
-    run
+    run macros'

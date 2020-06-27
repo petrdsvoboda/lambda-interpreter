@@ -1,6 +1,7 @@
 module Main where
 
 import           CLI
+import           Macro
 
 main :: IO ()
-main = run
+main = run idToVal

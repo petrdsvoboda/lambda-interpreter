@@ -2,8 +2,9 @@ module Macro where
 
 import qualified Data.Map                      as Map
 import           Data.Tuple                     ( swap )
+import           Types
 
-idToVal :: [(String, String)]
+idToVal :: [SavedMacro]
 idToVal =
   [ ("SUCC" , "(\\x s z.s (x s z))")
   , ("PRED", "(\\x s z.x (\\f g.g (f s)) (\\g.z) (\\u.u))")
@@ -36,7 +37,7 @@ valToId = map swap idToVal
 ids = map fst idToVal
 vals = map snd idToVal
 
-lookup :: [(String, String)] -> String -> Maybe String
+lookup :: [SavedMacro] -> String -> Maybe String
 lookup tuples x = Map.fromList tuples Map.!? x
 
 lookupVal :: String -> Maybe String

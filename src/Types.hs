@@ -2,8 +2,9 @@
 module Types where
 
 data SeparatorToken = Begin | End deriving (Eq)
-data KeywordToken = Fn | EndFn deriving (Eq)
+data KeywordToken = Assign | Fn | EndFn deriving (Eq)
 data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken deriving (Eq)
+type SavedMacro = (String, String)
 
 instance Show Token where
     show (Identifier x  ) = "ID~" ++ x
@@ -11,12 +12,15 @@ instance Show Token where
         Begin -> "S("
         End   -> "S)"
     show (Keyword key) = case key of
-        Fn    -> "K\\"
-        EndFn -> "K."
+        Assign -> "K="
+        Fn     -> "K\\"
+        EndFn  -> "K."
 instance {-# OVERLAPPING #-} Show [Token] where
     show = foldl (\acc curr -> acc ++ " " ++ show curr) ""
 
 data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term] deriving (Eq)
+type Expr = (Term, Maybe String)
+
 instance Show Term where
     show (Variable    v      ) = v
     show (Macro       text   ) = text
