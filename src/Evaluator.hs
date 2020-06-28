@@ -36,11 +36,17 @@ tmap f t = case t of
 betaReduction :: String -> Term -> Term -> Term
 betaReduction name arg term = case term of
     Variable    x       -> if x == name then arg else term
-    Application ts      -> Application (map (betaReduction name arg) ts)
     Abstraction (vs, t) -> if name `elem` vs
         then term
         else Abstraction (vs, betaReduction name arg t)
-    _ -> term
+    Application (t : ts) -> case t of
+        Application _ ->
+            Application [betaReduction name arg t]
+                <> betaReduction name arg (Application ts)
+        _ ->
+            betaReduction name arg t <> betaReduction name arg (Application ts)
+    Application [] -> Application []
+    _              -> term
 
 expandMacros :: [SavedMacro] -> Term -> Term
 expandMacros macros t = case t of
@@ -53,9 +59,11 @@ eval :: Term -> Term
 eval term = case term of
     Abstraction (v, t)         -> Abstraction (v, eval t)
     Application (a : b : rest) -> case a of
-        Abstraction ((v1 : v2 : vs), t) ->
-            Abstraction ((v2 : vs), betaReduction v1 b t) <> Application rest
-        Abstraction ([v], t) -> betaReduction v b t <> Application rest
-        _                    -> a <> eval (b <> Application rest)
-    Application [t] -> eval t
+        Abstraction ((v : vs), t) -> case b of
+            Application _ ->
+                Abstraction (vs, betaReduction v (Application [b]) t)
+                    <> Application rest
+            _ -> Abstraction (vs, betaReduction v b t) <> Application rest
+        _ -> a <> eval (Application (b : rest))
+    Application [t] -> Application [eval t]
     _               -> term

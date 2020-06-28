@@ -36,10 +36,10 @@ instance Show Term where
 instance Semigroup Term where
     (<>) a                     Empty                 = a
     (<>) Empty                 b                     = b
-    (<>) (Application as)      (Application bs)      = Application (as ++ bs)
-    (<>) (Application as)      b                     = Application (as ++ [b])
-    (<>) a                     (Application bs)      = Application (a : bs)
+    (<>) (Application as     ) (Application bs)      = Application (as ++ bs)
+    (<>) (Application as     ) b                     = Application (as ++ [b])
     (<>) (Abstraction ([], t)) b                     = t <> b
+    (<>) a                     (Application bs     ) = Application (a : bs)
     (<>) a                     (Abstraction ([], t)) = a <> t
     (<>) a                     b                     = Application [a, b]
 
