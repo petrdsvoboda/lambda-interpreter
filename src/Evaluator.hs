@@ -13,12 +13,12 @@ import           Macro
 
 
 tmap :: (Term -> Term) -> Term -> Term
-tmap f t = case t of
+tmap f term = case term of
     Empty                   -> Empty
-    Application ([]       ) -> Empty
+    Application ([]       ) -> Application []
     Application (term : ts) -> tmap f term <> tmap f (Application ts)
-    Abstraction (v, b)      -> Abstraction (v, tmap f t)
-    _                       -> f t
+    Abstraction (v, t)      -> Abstraction (v, tmap f t)
+    _                       -> f term
 
 -- tfold :: (Term -> Term) -> String -> Term -> Term
 -- tfold f v t = case t of
@@ -59,11 +59,12 @@ eval :: Term -> Term
 eval term = case term of
     Abstraction (v, t)         -> Abstraction (v, eval t)
     Application (a : b : rest) -> case a of
-        Abstraction ((v : vs), t) -> case b of
-            Application _ ->
-                Abstraction (vs, betaReduction v (Application [b]) t)
-                    <> Application rest
-            _ -> Abstraction (vs, betaReduction v b t) <> Application rest
+        Abstraction ((v : vs), t) -> reduced <> Application rest
+          where
+            reduced = case b of
+                Application _ ->
+                    Abstraction (vs, betaReduction v (Application [b]) t)
+                _ -> Abstraction (vs, betaReduction v b t)
         _ -> a <> eval (Application (b : rest))
     Application [t] -> Application [eval t]
     _               -> term
