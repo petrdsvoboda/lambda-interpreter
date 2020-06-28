@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a90744cf951f693e9b3285a2933dd9b5945c0fa42c0dc3b8f72bdc40453f9ad8
+-- hash: f136461d3af3d0ee465c1eafc3183c92ee7c3f96bd3597509844e7d3751ea6a5
 
 name:           lambda-interpreter
 version:        0.1.0.0
@@ -43,6 +43,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , unix
   default-language: Haskell2010
 
 executable lambda-interpreter-exe
@@ -56,6 +57,7 @@ executable lambda-interpreter-exe
       base >=4.7 && <5
     , containers
     , lambda-interpreter
+    , unix
   default-language: Haskell2010
 
 test-suite lambda-interpreter-test
@@ -70,4 +72,5 @@ test-suite lambda-interpreter-test
       base >=4.7 && <5
     , containers
     , lambda-interpreter
+    , unix
   default-language: Haskell2010
