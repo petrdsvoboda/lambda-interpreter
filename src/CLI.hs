@@ -21,14 +21,24 @@ log term = do
     hFlush stdout
     getChar
 
-answer :: Term -> IO ()
-answer term = putStrLn $ "< " ++ toString term
+answer :: EvalRes -> IO ()
+answer term = putStrLn $ "< " ++ res
+  where
+    res = case term of
+        Right t   -> toString t
+        Left  err -> err
 
-compute :: Term -> IO Term
-compute term = do
-    CLI.log term
-    let evaluated = eval term
-    if (evaluated == term) then return evaluated else compute evaluated
+
+compute :: [SavedMacro] -> Term -> IO EvalRes
+compute macros term = do
+    let evaluated = eval macros term
+    case evaluated of
+        Right t -> if (t == term)
+            then return evaluated
+            else do
+                CLI.log t
+                compute macros t
+        _ -> return evaluated
 
 run :: [SavedMacro] -> IO ()
 run macros = do
@@ -37,6 +47,6 @@ run macros = do
     let macros' = case assignTo of
             Just x  -> macros ++ [(x, line)]
             Nothing -> macros
-    res <- compute $ tmap (expandMacros macros') term
+    res <- compute macros' term
     answer res
     run macros'

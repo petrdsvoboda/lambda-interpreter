@@ -20,16 +20,17 @@ instance {-# OVERLAPPING #-} Show [Token] where
 
 data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term] deriving (Eq)
 type Expr = (Term, Maybe String)
+type EvalRes = Either String Term
 
 instance Show Term where
     show (Variable    v      ) = v
     show (Macro       text   ) = text
     show (Abstraction (vs, t)) = "(\\" ++ unwords vs ++ "." ++ show t ++ ")"
-    show (Application ts     ) = unwords $ map encapsulate ts
+    show (Application ts     ) = (unwords $ map encapsulate ts)
       where
         encapsulate :: Term -> String
         encapsulate t = case t of
-            (Application ts) -> "(" ++ show (Application ts) ++ ")"
+            (Application ts) -> "(" ++ show t ++ ")"
             _                -> show t
     show Empty = ""
 
@@ -42,8 +43,6 @@ instance Semigroup Term where
     (<>) a                     (Application bs     ) = Application (a : bs)
     (<>) a                     (Abstraction ([], t)) = a <> t
     (<>) a                     b                     = Application [a, b]
-
-
 
 instance Monoid Term where
     mempty  = Empty

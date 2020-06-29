@@ -34,7 +34,7 @@ expr =
               ( ["x", "y"]
               , Application [Variable "x", Variable "x", Variable "y"]
               )
-          , Abstraction (["x"], Application [Variable "y", Macro "1"])
+          , Abstraction (["y"], Application [Variable "y", Macro "1"])
           , Application [Macro "2"]
           ]
       )

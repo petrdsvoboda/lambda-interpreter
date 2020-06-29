@@ -1,7 +1,8 @@
 module Evaluator
     ( eval
-    , expandMacros
     , tmap
+    , macroExpansion
+    , betaReduction
     )
 where
 
@@ -11,6 +12,9 @@ import           Parser
 import           Lexer
 import           Macro
 import           Debug.Trace
+
+-- FIXME: (\s z.s (z)) != (\s z.s z) but should
+
 
 tmap :: (Term -> Term) -> Term -> Term
 tmap f term = case term of
@@ -32,34 +36,46 @@ tmap f term = case term of
 --         if inner_v == v then t else Abstraction (inner_v, tfold f v inner_t)
 --     _ -> f t
 
-betaReduction :: String -> Term -> Term -> Term
-betaReduction name arg term = case term of
-    Variable    x       -> if x == name then arg else term
-    Abstraction (vs, t) -> if name `elem` vs
-        then term
-        else Abstraction (vs, betaReduction name arg t)
+replace :: String -> Term -> Term -> Term
+replace var with term = case term of
+    Variable x -> if x == var then with else term
+    Abstraction (vs, t) ->
+        if var `elem` vs then term else Abstraction (vs, replace var with t)
     Application (t : ts) -> case t of
-        Application _ ->
-            Application [betaReduction name arg t]
-                <> betaReduction name arg (Application ts)
-        _ ->
-            betaReduction name arg t <> betaReduction name arg (Application ts)
+        Application _ -> Application [replace var with t]
+            <> replace var with (Application ts)
+        _ -> replace var with t <> replace var with (Application ts)
     Application [] -> Application []
     _              -> term
 
-expandMacros :: [SavedMacro] -> Term -> Term
-expandMacros macros t = case t of
-    Macro m -> case (Macro.lookup macros m) of
-        Just val -> termFromString val
-        Nothing  -> Empty
-    _ -> t
+macroExpansion :: [SavedMacro] -> Term -> Maybe Term
+macroExpansion macros term = case term of
+    Abstraction (v, t) -> case inner of
+        Just t -> Just $ Abstraction (v, t)
+        _      -> Nothing
+      where
+        inner = case t of
+            Macro m -> expand m
+            _       -> macroExpansion macros t
+    Application (t : ts) -> case t of
+        Macro m -> expand m <> (Just $ Application ts)
+        _       -> Just t <> macroExpansion macros (Application (ts))
+    Application [] -> Just $ Application []
+    Macro       m  -> expand m
+    _              -> Just term
+  where
+    expand :: String -> Maybe Term
+    expand m = case (Macro.lookup macros m) of
+        Just val -> Just $ termFromString val
+        Nothing  -> Nothing
 
 consolidateAbstractions :: Term -> Term
 consolidateAbstractions term = case term of
     Abstraction (vs, t) -> case t of
         Application [Abstraction (inner_vs, inner_t)] ->
             Abstraction (vs ++ inner_vs, consolidateAbstractions inner_t)
-        _ -> Abstraction (vs, consolidateAbstractions t)
+        Application [t] -> Abstraction (vs, t)
+        _               -> Abstraction (vs, consolidateAbstractions t)
     Application ([]    ) -> Application []
     Application (t : ts) -> applied <> consolidateAbstractions (Application ts)
       where
@@ -68,18 +84,45 @@ consolidateAbstractions term = case term of
             _             -> consolidateAbstractions t
     _ -> term
 
-eval :: Term -> Term
-eval term = consolidateAbstractions res
+-- consolidateApplication :: Term -> Term
+-- consolidateApplication term = case term of
+--     Abstraction (vs, t)  -> Abstraction (vs, consolidateApplication t)
+--     Application ([]    ) -> Application []
+--     Application ([ t ] ) -> t
+--     Application (t : ts) -> applied <> consolidateApplication (Application ts)
+--       where
+--         applied = case t of
+--             Application _ -> Application [consolidateApplication t]
+--             _             -> consolidateApplication t
+--     _ -> term
+
+betaReduction :: Term -> Term
+betaReduction term = case term of
+    Abstraction (v, t)         -> Abstraction (v, betaReduction t)
+    Application (a : b : rest) -> case a of
+        Abstraction ((v : vs), t) -> Abstraction (vs, reduced)
+            <> Application rest
+          where
+            reduced = case b of
+                Application _ -> replace v (Application [b]) t
+                _             -> replace v b t
+        _ -> a <> betaReduction (Application (b : rest))
+    Application [t] -> Application [betaReduction t]
+    _               -> term
+
+eval :: [SavedMacro] -> Term -> EvalRes
+eval macros term = case res of
+    Left  _ -> res
+    Right t -> Right $ consolidateAbstractions t
   where
-    res = case term of
-        Abstraction (v, t)         -> Abstraction (v, eval t)
-        Application (a : b : rest) -> case a of
-            Abstraction ((v : vs), t) -> Abstraction (vs, reduced)
-                <> Application rest
-              where
-                reduced = case b of
-                    Application _ -> betaReduction v (Application [b]) t
-                    _             -> betaReduction v b t
-            _ -> a <> eval (Application (b : rest))
-        Application [t] -> Application [eval t]
-        _               -> term
+    expanded = case macroExpansion macros term of
+        Just t  -> Right t
+        Nothing -> Left "Error: Macro expansion"
+    betaReduced = Right $ betaReduction term
+    pick :: (Bool, EvalRes) -> EvalRes -> (Bool, EvalRes)
+    pick acc@(found, prev) curr = if found
+        then acc
+        else case curr of
+            Right t -> if curr == prev then (False, curr) else (True, curr)
+            Left  _ -> (True, curr)
+    (_, res) = foldl pick (False, Right term) [expanded, betaReduced]
