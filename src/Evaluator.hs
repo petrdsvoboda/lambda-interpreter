@@ -10,15 +10,19 @@ import           Types
 import           Parser
 import           Lexer
 import           Macro
-
+import           Debug.Trace
 
 tmap :: (Term -> Term) -> Term -> Term
 tmap f term = case term of
-    Empty                   -> Empty
-    Application ([]       ) -> Application []
-    Application (term : ts) -> tmap f term <> tmap f (Application ts)
-    Abstraction (v, t)      -> Abstraction (v, tmap f t)
-    _                       -> f term
+    Empty                -> Empty
+    Application ([]    ) -> Application []
+    Application (t : ts) -> applied <> tmap f (Application ts)
+      where
+        applied = case t of
+            Application _ -> Application [tmap f t]
+            _             -> tmap f t
+    Abstraction (v, t) -> Abstraction (v, tmap f t)
+    _                  -> f term
 
 -- tfold :: (Term -> Term) -> String -> Term -> Term
 -- tfold f v t = case t of
@@ -27,11 +31,6 @@ tmap f term = case term of
 --     Abstraction (inner_v, inner_t) ->
 --         if inner_v == v then t else Abstraction (inner_v, tfold f v inner_t)
 --     _ -> f t
-
--- betaReduction :: String -> Term -> Term -> Term
--- betaReduction v arg t = case t of
---     Variable var -> if v == var then arg else t
---     _            -> t
 
 betaReduction :: String -> Term -> Term -> Term
 betaReduction name arg term = case term of
@@ -55,16 +54,32 @@ expandMacros macros t = case t of
         Nothing  -> Empty
     _ -> t
 
+consolidateAbstractions :: Term -> Term
+consolidateAbstractions term = case term of
+    Abstraction (vs, t) -> case t of
+        Application [Abstraction (inner_vs, inner_t)] ->
+            Abstraction (vs ++ inner_vs, consolidateAbstractions inner_t)
+        _ -> Abstraction (vs, consolidateAbstractions t)
+    Application ([]    ) -> Application []
+    Application (t : ts) -> applied <> consolidateAbstractions (Application ts)
+      where
+        applied = case t of
+            Application _ -> Application [consolidateAbstractions t]
+            _             -> consolidateAbstractions t
+    _ -> term
+
 eval :: Term -> Term
-eval term = case term of
-    Abstraction (v, t)         -> Abstraction (v, eval t)
-    Application (a : b : rest) -> case a of
-        Abstraction ((v : vs), t) -> reduced <> Application rest
-          where
-            reduced = case b of
-                Application _ ->
-                    Abstraction (vs, betaReduction v (Application [b]) t)
-                _ -> Abstraction (vs, betaReduction v b t)
-        _ -> a <> eval (Application (b : rest))
-    Application [t] -> Application [eval t]
-    _               -> term
+eval term = consolidateAbstractions res
+  where
+    res = case term of
+        Abstraction (v, t)         -> Abstraction (v, eval t)
+        Application (a : b : rest) -> case a of
+            Abstraction ((v : vs), t) -> Abstraction (vs, reduced)
+                <> Application rest
+              where
+                reduced = case b of
+                    Application _ -> betaReduction v (Application [b]) t
+                    _             -> betaReduction v b t
+            _ -> a <> eval (Application (b : rest))
+        Application [t] -> Application [eval t]
+        _               -> term

@@ -23,6 +23,8 @@ dependencies:
   - base >= 4.7 && < 5
   - containers
   - unix
+  - ansi-terminal
+  - hspec
 
 library:
   source-dirs: src

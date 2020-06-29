@@ -15,6 +15,7 @@ idToVal =
   , ("AND"  , "(\\x y.x y x)")
   , ("OR"   , "(\\x y.x x y)")
   , ("NOT"  , "(\\p.p T F)")
+  , ("IF"   , "(\\p t e.p t e)")
   , ("+"    , "(\\x y s z.x s (y s z))")
   , ("-"    , "(\\m n.(n PRED) m)")
   , ("*"    , "(\\x y s.x (y s))")

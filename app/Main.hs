@@ -1,5 +1,6 @@
 module Main where
 
+import           System.Console.ANSI
 import           System.Exit
 import           System.Posix.Signals
 import           Control.Concurrent

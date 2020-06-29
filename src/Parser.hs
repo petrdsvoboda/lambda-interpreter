@@ -1,5 +1,6 @@
 module Parser
-    ( parseTree
+    ( parse
+    , parseStatement
     , fromString
     , toString
     )
@@ -22,8 +23,8 @@ data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term
 emptyItem :: StackItem
 emptyItem = StackItem { isFn = False, inFn = False, fnVar = [], term = Empty }
 
-parseTree :: [Token] -> Expr
-parseTree tokens = (term, assignTo)
+parseStatement :: [Token] -> Term
+parseStatement tokens = term
   where
     expandStack :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     expandStack stack token
@@ -59,17 +60,21 @@ parseTree tokens = (term, assignTo)
     parse :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
     parse stack token =
         expandStack (parseToken (consolidateStack stack token) token) token
-    isAssignment = length tokens > 1 && (tokens !! 1 == (Keyword Assign))
-    id           = case head tokens of
-        Identifier x -> x
-        _            -> ""
-    termTokens                = if isAssignment then drop 2 tokens else tokens
-    stack = foldl parse (Stack.fromList [emptyItem]) termTokens
+    stack                     = foldl parse (Stack.fromList [emptyItem]) tokens
     StackItem { term = term } = Stack.top stack
-    assignTo                  = if isAssignment then Just id else Nothing
+
+parse :: [Token] -> Expr
+parse tokens = (term, assignTo)
+  where
+    isAssignment = length tokens > 1 && (tokens !! 1 == (Keyword Assign))
+    assignTo     = case head tokens of
+        Identifier x -> Just x
+        _            -> Nothing
+    tokensStatement = if isAssignment then drop 2 tokens else tokens
+    term            = parseStatement tokensStatement
 
 fromString :: String -> Expr
-fromString = parseTree . tokenize
+fromString = parse . tokenize
 
 toString :: Term -> String
 toString term = case lookupId $ show term of
