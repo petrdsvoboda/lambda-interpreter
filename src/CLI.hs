@@ -33,7 +33,7 @@ compute term = do
 run :: [SavedMacro] -> IO ()
 run macros = do
     line <- prompt
-    let (term, assignTo) = fromString line
+    let (term, assignTo) = exprFromString line
     let macros' = case assignTo of
             Just x  -> macros ++ [(x, line)]
             Nothing -> macros

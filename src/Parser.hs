@@ -1,7 +1,8 @@
 module Parser
     ( parse
     , parseStatement
-    , fromString
+    , exprFromString
+    , termFromString
     , toString
     )
 where
@@ -15,6 +16,8 @@ import           Lexer
 import           Macro
 
 
+-- FIXME: parse (x) to Application [Variable "x"] not Variable "x"
+
 parseVar :: String -> Term
 parseVar text = if Char.isLower $ head text then Variable text else Macro text
 
@@ -23,15 +26,14 @@ data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term
 emptyItem :: StackItem
 emptyItem = StackItem { isFn = False, inFn = False, fnVar = [], term = Empty }
 
-parseStatement :: [Token] -> Term
-parseStatement tokens = term
+parseToken :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
+parseToken stack token = expand . analyze $ consolidate stack
   where
-    expandStack :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
-    expandStack stack token
-        | token == Separator Begin = Stack.push emptyItem stack
-        | otherwise                = stack
-    consolidateStack :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
-    consolidateStack stack token
+    expand :: Stack.Stack StackItem -> Stack.Stack StackItem
+    expand stack | token == Separator Begin = Stack.push emptyItem stack
+                 | otherwise                = stack
+    consolidate :: Stack.Stack StackItem -> Stack.Stack StackItem
+    consolidate stack
         | token == Separator End = Stack.push next (Stack.pop (Stack.pop stack))
         | otherwise              = stack
       where
@@ -42,8 +44,8 @@ parseStatement tokens = term
             False -> case List.null fnVar of
                 True  -> prev { term = termPrev <> Application [term] }
                 False -> prev { term = termPrev <> Abstraction (fnVar, term) }
-    parseToken :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
-    parseToken stack token = Stack.push stackItem (Stack.pop stack)
+    analyze :: Stack.Stack StackItem -> Stack.Stack StackItem
+    analyze stack = Stack.push stackItem (Stack.pop stack)
       where
         curr@StackItem { isFn = isFn, inFn = inFn, fnVar = fnVar, term = term }
             = Stack.top stack
@@ -57,10 +59,10 @@ parseStatement tokens = term
                 EndFn -> curr { inFn = False }
             _ -> curr
 
-    parse :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
-    parse stack token =
-        expandStack (parseToken (consolidateStack stack token) token) token
-    stack                     = foldl parse (Stack.fromList [emptyItem]) tokens
+parseStatement :: [Token] -> Term
+parseStatement tokens = term
+  where
+    stack = foldl parseToken (Stack.fromList [emptyItem]) tokens
     StackItem { term = term } = Stack.top stack
 
 parse :: [Token] -> Expr
@@ -73,8 +75,11 @@ parse tokens = (term, assignTo)
     tokensStatement = if isAssignment then drop 2 tokens else tokens
     term            = parseStatement tokensStatement
 
-fromString :: String -> Expr
-fromString = parse . tokenize
+exprFromString :: String -> Expr
+exprFromString = parse . tokenize
+
+termFromString :: String -> Term
+termFromString = parseStatement . tokenize
 
 toString :: Term -> String
 toString term = case lookupId $ show term of

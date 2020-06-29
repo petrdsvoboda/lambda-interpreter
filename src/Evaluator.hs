@@ -50,7 +50,7 @@ betaReduction name arg term = case term of
 expandMacros :: [SavedMacro] -> Term -> Term
 expandMacros macros t = case t of
     Macro m -> case (Macro.lookup macros m) of
-        Just val -> fst $ fromString val
+        Just val -> termFromString val
         Nothing  -> Empty
     _ -> t
 
