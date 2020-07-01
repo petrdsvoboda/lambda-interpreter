@@ -57,12 +57,18 @@ macroExpansion macros term = case term of
         inner = case t of
             Macro m -> expand m
             _       -> macroExpansion macros t
-    Application (t : ts) -> case t of
-        Macro m -> expand m <> (Just $ Application ts)
-        _       -> Just t <> macroExpansion macros (Application (ts))
-    Application [] -> Just $ Application []
-    Macro       m  -> expand m
-    _              -> Just term
+    Application (a : b : rest) -> case a of
+        Abstraction _ -> Just a <> expanded <> Just (Application rest)
+          where
+            expanded = case b of
+                Macro m -> expand m
+                _       -> Just b
+        Macro m -> expand m <> Just (Application (b : rest))
+        _       -> Just a <> macroExpansion macros (Application (b : rest))
+    Application [t] -> case macroExpansion macros t of
+        Just inner -> Just (Application [inner])
+        Nothing    -> Nothing
+    _ -> Just term
   where
     expand :: String -> Maybe Term
     expand m = case (Macro.lookup macros m) of

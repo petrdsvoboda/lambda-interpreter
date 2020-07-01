@@ -10,6 +10,7 @@ import           Test.Hspec
 import           Evaluator
 import           Parser
 import           Types
+import           Macro
 
 expr :: [(String, String)]
 expr =
@@ -23,11 +24,10 @@ token = map (show . swap) expr
 toTerm :: String -> Term
 toTerm x = termFromString (Map.fromList expr Map.! x)
 
+macros = Macro.idToVal
+
 spec :: Spec
-spec = describe "eval" $ do
-    it "evaluates" $ do
-        eval (termFromString "(\\x.x) y") `shouldBe` toTerm "(\\x.x) y"
-        eval (termFromString "(\\x.x x) y") `shouldBe` toTerm "(\\x.x x) y"
-        eval (termFromString "(\\x.x (x)) y") `shouldBe` toTerm "(\\x.x (x)) y"
-        eval (termFromString "(\\x.x (x)) (\\y.y)")
-            `shouldBe` toTerm "(\\x.x (x)) (\\y.y)"
+spec = describe "macroExpansion" $ do
+    it "expands" $ do
+        betaReduction macros (termFromString "(\\x.x) 1")
+            `shouldBe` Just (termFromString "(\\x.x) (\\s z. s z)")

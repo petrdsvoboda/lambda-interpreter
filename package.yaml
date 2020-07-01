@@ -25,6 +25,7 @@ dependencies:
   - unix
   - ansi-terminal
   - hspec
+  - hspec-discover
 
 library:
   source-dirs: src
