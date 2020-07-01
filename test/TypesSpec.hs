@@ -19,6 +19,9 @@ abs1 = Abstraction (["x"], x)
 abs2 = Abstraction (["x"], ap2)
 abs22 = Abstraction (["x", "x"], ap2)
 
+eqAb1 = Abstraction (["x"], ap2)
+eqAb2 = Abstraction (["x"], apNested)
+
 spec :: Spec
 spec = describe "Term" $ do
     it "correctly implements Show" $ do
@@ -38,6 +41,8 @@ spec = describe "Term" $ do
         ap1 == ap1 `shouldBe` True
         ap1 == x `shouldBe` True
         x == ap1 `shouldBe` True
+        ap2 == apNested `shouldBe` True
+        eqAb1 == eqAb2 `shouldBe` True
     it "correctly implements Semigroup" $ do
         Empty <> Empty `shouldBe` Empty
         x <> Empty `shouldBe` x

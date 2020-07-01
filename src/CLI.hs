@@ -7,6 +7,7 @@ import           Lexer
 import           Control.Monad
 
 import           Types
+import           Data.Tuple                     ( swap )
 
 -- | Prompts text and allows answer on same line
 prompt :: IO String
@@ -21,11 +22,11 @@ log term = do
     hFlush stdout
     getChar
 
-answer :: EvalRes -> IO ()
-answer term = putStrLn $ "< " ++ res
+answer :: [SavedMacro] -> EvalRes -> IO ()
+answer macros term = putStrLn $ "< " ++ res
   where
     res = case term of
-        Right t   -> toString t
+        Right t   -> toString (map swap macros) t
         Left  err -> err
 
 
@@ -48,5 +49,5 @@ run macros = do
             Just x  -> macros ++ [(x, show term)]
             Nothing -> macros
     res <- compute macros' term
-    answer res
+    answer macros' res
     run macros'

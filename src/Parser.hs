@@ -95,7 +95,9 @@ exprFromString = parse . tokenize
 termFromString :: String -> Term
 termFromString = parseStatement . tokenize
 
-toString :: Term -> String
-toString term = case lookupId $ show term of
-  Just x  -> x
-  Nothing -> show term
+
+toString :: [SavedMacro] -> Term -> String
+toString macros term = case List.find (\(fst, _) -> term == fst) macroList of
+  Just (_, m) -> m
+  Nothing     -> show term
+  where macroList = map (\(fst, snd) -> (termFromString fst, snd)) macros
