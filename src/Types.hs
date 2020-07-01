@@ -94,9 +94,6 @@ instance Monoid Term where
 --         (Abstraction (v, t)) -> t >>= f
 
 
-data Block = BlockText String | SubBlocks [Block]
-instance Show Block where
-    show (BlockText text) = show text
-    show (SubBlocks bs  ) = show bs
-
 type IndexRange = (Int, Int)
+
+data ProgramFlags = ProgramFlags { quiet :: Bool}
