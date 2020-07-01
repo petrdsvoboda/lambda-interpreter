@@ -45,7 +45,7 @@ run macros = do
     line <- prompt
     let (term, assignTo) = exprFromString line
     let macros' = case assignTo of
-            Just x  -> macros ++ [(x, line)]
+            Just x  -> macros ++ [(x, show term)]
             Nothing -> macros
     res <- compute macros' term
     answer res
