@@ -8,6 +8,7 @@ import           Control.Monad
 
 import           Types
 import           Data.Tuple                     ( swap )
+import qualified Data.List                     as List
 
 -- | Prompts text and allows answer on same line
 prompt :: IO String
@@ -26,6 +27,8 @@ log term = do
 answer :: [SavedMacro] -> EvalRes -> IO ()
 answer macros term = putStrLn $ "< " ++ res
   where
+    t   = show term
+    x   = List.find (\(fst, _) -> t == fst) (map swap macros)
     res = case term of
         Right t   -> toString (map swap macros) t
         Left  err -> err

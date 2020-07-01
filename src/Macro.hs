@@ -43,13 +43,13 @@ idToVal :: [SavedMacro]
 idToVal = idToValBase ++ numbers
  where
   numbers :: [SavedMacro]
-  (_, numbers) = ($!) foldl genNext (macro9, []) [10 .. 100]
+  (_, numbers) = ($!) foldl genNext (macro9, []) [10 .. 1000]
   genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
   genNext (prev, acc) curr = (incByOne, acc ++ [(show curr, incByOne)])
    where
-    term     = termFromString $ "((\\x s z.s (x s z)) " ++ prev ++ ")"
-    reduced  = betaReduction . betaReduction $ betaReduction term
-    incByOne = show reduced
+    term     = ($!) termFromString $! "((\\x s z.s (x s z)) " ++ prev ++ ")"
+    reduced  = ($!) betaReduction $! betaReduction $! betaReduction term
+    incByOne = ($!) show reduced
 valToId = map swap idToVal
 
 ids = map fst idToVal
