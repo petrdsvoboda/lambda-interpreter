@@ -10,8 +10,8 @@ import           Chars
 import           Types
 import           Parser
 import           Lexer
-import           Macro
 import           Debug.Trace
+import qualified Data.Map                      as Map
 
 -- FIXME: (\s z.s (z)) != (\s z.s z) but should
 
@@ -67,9 +67,11 @@ macroExpansion macros term = case term of
     _ -> Just term
   where
     expand :: String -> Maybe Term
-    expand m = case (Macro.lookup macros m) of
+    expand m = case (lookup macros m) of
         Just val -> Just $ termFromString val
         Nothing  -> Nothing
+    lookup :: Ord a => [(a, String)] -> a -> Maybe String
+    lookup tuples x = Map.fromList tuples Map.!? x
 
 consolidateAbstractions :: Term -> Term
 consolidateAbstractions term = case term of

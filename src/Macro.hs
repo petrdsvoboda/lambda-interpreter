@@ -3,9 +3,13 @@ module Macro where
 import qualified Data.Map                      as Map
 import           Data.Tuple                     ( swap )
 import           Types
+import           Parser
+import           Evaluator
 
-idToVal :: [SavedMacro]
-idToVal =
+macro9 = "(\\s z.s (s (s (s (s (s (s (s (s z)))))))))"
+
+idToValBase :: [SavedMacro]
+idToValBase =
   [ ("SUCC" , "(\\x s z.s (x s z))")
   , ("PRED", "(\\x s z.x (\\f g.g (f s)) (\\g.z) (\\u.u))")
   , ("T"    , "(\\t f.t)")
@@ -27,13 +31,25 @@ idToVal =
   , ("4"    , "(\\s z.s (s (s (s z))))")
   , ("5"    , "(\\s z.s (s (s (s (s z)))))")
   , ("6"    , "(\\s z.s (s (s (s (s (s z))))))")
-  , ("7"    , "(\\s z.s (s (s (s (s (s (s z)))))))")
-  , ("8"    , "(\\s z.s (s (s (s (s (s (s (s z))))))))")
-  , ("9", "(\\s z.s (s (s (s (s (s (s (s (s z)))))))))")
+  , ("7", "(\\s z.s (s (s (s (s (s (s z)))))))")
+  , ("8", "(\\s z.s (s (s (s (s (s (s (s z))))))))")
+  , ("9"    , macro9)
   , ("ZERO" , "(\\n.n (\\x.F)T)")
   , ("Y"    , "(\\f.(\\x.f x x) (\\x.f x x))")
-  , ("FAC"  , "(\\f n. ZERO n 1 (* n (f (- n 1))))")
+  , ("FAC", "(\\f n. ZERO n 1 (* n (f (- n 1))))")
   ]
+
+idToVal :: [SavedMacro]
+idToVal = idToValBase ++ numbers
+ where
+  numbers :: [SavedMacro]
+  (_, numbers) = ($!) foldl genNext (macro9, []) [10 .. 100]
+  genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
+  genNext (prev, acc) curr = (incByOne, acc ++ [(show curr, incByOne)])
+   where
+    term     = termFromString $ "((\\x s z.s (x s z)) " ++ prev ++ ")"
+    reduced  = betaReduction . betaReduction $ betaReduction term
+    incByOne = show reduced
 valToId = map swap idToVal
 
 ids = map fst idToVal

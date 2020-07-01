@@ -96,4 +96,4 @@ instance Monoid Term where
 
 type IndexRange = (Int, Int)
 
-data ProgramFlags = ProgramFlags { quiet :: Bool}
+data ProgramFlags = ProgramFlags { quiet :: Bool }

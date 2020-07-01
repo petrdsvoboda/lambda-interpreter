@@ -14,7 +14,6 @@ import qualified Data.Stack                    as Stack
 import           Chars
 import           Types
 import           Lexer
-import           Macro
 
 
 -- FIXME: parse (x) to Application [Variable "x"] not Variable "x"
