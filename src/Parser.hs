@@ -4,6 +4,7 @@ module Parser
   , exprFromString
   , termFromString
   , toString
+  , append
   )
 where
 
@@ -17,6 +18,17 @@ import           Macro
 
 
 -- FIXME: parse (x) to Application [Variable "x"] not Variable "x"
+
+append :: Term -> Term -> Term
+append t1 t2 = case t1 of
+  Application ts -> Application (ts ++ [appended])
+  Empty          -> appended
+  _              -> Application [t1, appended]
+ where
+  appended = case t2 of
+    Application _ -> t2
+    Abstraction _ -> t2
+    _             -> Application [t2]
 
 parseVar :: String -> Term
 parseVar text = if Char.isLower $ head text then Variable text else Macro text
@@ -42,8 +54,8 @@ parseToken stack token = expand . analyze $ consolidate stack
     next = case term == Empty of
       True  -> prev
       False -> case List.null fnVar of
-        True  -> prev { term = termPrev <> Application [term] }
-        False -> prev { term = termPrev <> Abstraction (fnVar, term) }
+        True  -> prev { term = append termPrev term }
+        False -> prev { term = append termPrev $ Abstraction (fnVar, term) }
   analyze :: Stack.Stack StackItem -> Stack.Stack StackItem
   analyze stack = Stack.push stackItem (Stack.pop stack)
    where

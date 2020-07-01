@@ -8,8 +8,8 @@ import           Data.Tuple                     ( swap )
 import           Test.Hspec
 
 import           Parser
+import           Lexer
 import           Types
-import           LexerSpec                      ( toToken )
 
 expr :: [(String, Term)]
 expr =
@@ -44,21 +44,39 @@ token = map (show . swap) expr
 toTerm :: String -> Term
 toTerm x = Map.fromList expr Map.! x
 
+x = Variable "x"
+ap1 = Application [x]
+ap2 = Application [x, x]
+ap3 = Application [x, x, x]
+
 spec :: Spec
-spec = describe "parseStatement" $ do
-    it "parses identifier" $ do
-        parseStatement (toToken "x") `shouldBe` toTerm "x"
-        parseStatement (toToken "1") `shouldBe` toTerm "1"
-        parseStatement (toToken "x y z") `shouldBe` toTerm "x y z"
-        parseStatement (toToken "TEST") `shouldBe` toTerm "TEST"
-    it "parses with parentheses" $ do
-        parseStatement (toToken "(x)") `shouldBe` toTerm "(x)"
-        -- parseStatement (toToken "x (x)") `shouldBe` toTerm "x (x)"
-        -- parseStatement (toToken "x x (x x (x))")
-        --     `shouldBe` toTerm "x x (x x (x))"
-    it "parses function" $ do
-        parseStatement (toToken "(\\x.x)") `shouldBe` toTerm "(\\x.x)"
-        parseStatement (toToken "(\\x y.x)") `shouldBe` toTerm "(\\x y.x)"
-    -- it "parses complex exxpression" $ do
-        -- parseStatement (toToken "(\\x y.x x y)(\\y.y 1)(2)")
-            -- `shouldBe` toTerm "(\\x y.x x y)(\\y.y 1)(2)"
+spec = do
+    describe "append" $ do
+        it "appends correctly" $ do
+            append x x `shouldBe` Application [x, ap1]
+            append ap1 x `shouldBe` Application [x, ap1]
+            append ap2 x `shouldBe` Application [x, x, ap1]
+        it "handles application correctly" $ do
+            append x ap1 `shouldBe` Application [x, ap1]
+            append ap1 ap1 `shouldBe` Application [x, ap1]
+            append ap2 ap2 `shouldBe` Application [x, x, ap2]
+        it "handles Empty" $ do
+            append Empty x `shouldBe` ap1
+            append Empty ap1 `shouldBe` ap1
+    describe "parseStatement" $ do
+        it "parses identifier" $ do
+            parseStatement (tokenize "x") `shouldBe` toTerm "x"
+            parseStatement (tokenize "1") `shouldBe` toTerm "1"
+            parseStatement (tokenize "x y z") `shouldBe` toTerm "x y z"
+            parseStatement (tokenize "TEST") `shouldBe` toTerm "TEST"
+        it "parses with parentheses" $ do
+            parseStatement (tokenize "(x)") `shouldBe` toTerm "(x)"
+            parseStatement (tokenize "x (x)") `shouldBe` toTerm "x (x)"
+            parseStatement (tokenize "x x (x x (x))")
+                `shouldBe` toTerm "x x (x x (x))"
+        it "parses function" $ do
+            parseStatement (tokenize "(\\x.x)") `shouldBe` toTerm "(\\x.x)"
+            parseStatement (tokenize "(\\x y.x)") `shouldBe` toTerm "(\\x y.x)"
+        it "parses complex exxpression" $ do
+            parseStatement (tokenize "(\\x y.x x y)(\\y.y 1)(2)")
+                `shouldBe` toTerm "(\\x y.x x y)(\\y.y 1)(2)"

@@ -32,13 +32,14 @@ idToVal =
   , ("9", "(\\s z.s (s (s (s (s (s (s (s (s z)))))))))")
   , ("ZERO" , "(\\n.n (\\x.F)T)")
   , ("Y"    , "(\\f.(\\x.f x x) (\\x.f x x))")
+  , ("FAC"  , "(\\f n. ZERO n 1 (* n (f (- n 1))))")
   ]
 valToId = map swap idToVal
 
 ids = map fst idToVal
 vals = map snd idToVal
 
-lookup :: [SavedMacro] -> String -> Maybe String
+lookup :: Ord a => [(a, String)] -> a -> Maybe String
 lookup tuples x = Map.fromList tuples Map.!? x
 
 lookupVal :: String -> Maybe String

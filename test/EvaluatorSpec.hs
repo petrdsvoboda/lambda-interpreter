@@ -29,5 +29,5 @@ macros = Macro.idToVal
 spec :: Spec
 spec = describe "macroExpansion" $ do
     it "expands" $ do
-        betaReduction macros (termFromString "(\\x.x) 1")
-            `shouldBe` Just (termFromString "(\\x.x) (\\s z. s z)")
+        macroExpansion macros (termFromString "1 1")
+            `shouldBe` Just (termFromString "(\\s z.s z) 1")

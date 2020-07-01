@@ -58,13 +58,9 @@ macroExpansion macros term = case term of
             Macro m -> expand m
             _       -> macroExpansion macros t
     Application (a : b : rest) -> case a of
-        Abstraction _ -> Just a <> expanded <> Just (Application rest)
-          where
-            expanded = case b of
-                Macro m -> expand m
-                _       -> Just b
+        Abstraction _ -> Just (Application (a : b : rest))
         Macro m -> expand m <> Just (Application (b : rest))
-        _       -> Just a <> macroExpansion macros (Application (b : rest))
+        _ -> Just a <> macroExpansion macros (Application (b : rest))
     Application [t] -> case macroExpansion macros t of
         Just inner -> Just (Application [inner])
         Nothing    -> Nothing
@@ -90,17 +86,13 @@ consolidateAbstractions term = case term of
             _             -> consolidateAbstractions t
     _ -> term
 
--- consolidateApplication :: Term -> Term
--- consolidateApplication term = case term of
---     Abstraction (vs, t)  -> Abstraction (vs, consolidateApplication t)
---     Application ([]    ) -> Application []
---     Application ([ t ] ) -> t
---     Application (t : ts) -> applied <> consolidateApplication (Application ts)
---       where
---         applied = case t of
---             Application _ -> Application [consolidateApplication t]
---             _             -> consolidateApplication t
---     _ -> term
+consolidateApplication :: Term -> Term
+consolidateApplication term = case term of
+    Application ([t]) -> consolidateApplication t
+    _                 -> term
+
+consolidate :: Term -> Term
+consolidate = consolidateApplication . consolidateAbstractions
 
 betaReduction :: Term -> Term
 betaReduction term = case term of
@@ -119,7 +111,7 @@ betaReduction term = case term of
 eval :: [SavedMacro] -> Term -> EvalRes
 eval macros term = case res of
     Left  _ -> res
-    Right t -> Right $ consolidateAbstractions t
+    Right t -> Right $ consolidate t
   where
     expanded = case macroExpansion macros term of
         Just t  -> Right t

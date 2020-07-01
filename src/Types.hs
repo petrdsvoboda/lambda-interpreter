@@ -18,21 +18,33 @@ instance Show Token where
 instance {-# OVERLAPPING #-} Show [Token] where
     show = foldl (\acc curr -> acc ++ " " ++ show curr) ""
 
-data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term] deriving (Eq)
+data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term]
 type Expr = (Term, Maybe String)
 type EvalRes = Either String Term
 
 instance Show Term where
     show (Variable    v      ) = v
     show (Macro       text   ) = text
-    show (Abstraction (vs, t)) = "(\\" ++ unwords vs ++ "." ++ show t ++ ")"
-    show (Application ts     ) = (unwords $ map encapsulate ts)
+    show (Abstraction (vs, t)) = "(\\" ++ unwords vs ++ "." ++ inner ++ ")"
       where
-        encapsulate :: Term -> String
-        encapsulate t = case t of
-            (Application ts) -> "(" ++ show t ++ ")"
-            _                -> show t
-    show Empty = ""
+        inner = case t of
+            Application ts -> unwords $ map show ts
+            _              -> show t
+    show (Application ts) = "(" ++ (unwords $ map show ts) ++ ")"
+    show Empty            = ""
+
+instance Eq Term where
+    (==) Empty         Empty         = True
+    (==) (Variable v1) (Variable v2) = v1 == v2
+    (==) (Macro    m1) (Macro    m2) = m1 == m2
+    (==) (Abstraction (vs1, t1)) (Abstraction (vs2, t2)) =
+        vs1 == vs2 && t1 == t2
+    (==) (Application (t1 : ts1)) (Application (t2 : ts2)) =
+        t1 == t2 && Application ts1 == Application ts2
+    (==) (Application [t1]) t2                 = t1 == t2
+    (==) t1                 (Application [t2]) = t1 == t2
+    (==) (Application [])   (Application []  ) = True
+    (==) _                  _                  = False
 
 instance Semigroup Term where
     (<>) a                     Empty                 = a
