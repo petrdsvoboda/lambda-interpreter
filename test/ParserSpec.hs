@@ -64,6 +64,27 @@ spec = do
             append Empty x `shouldBe` ap1
             append Empty ap1 `shouldBe` ap1
     describe "parseStatement" $ do
+        it "parses var correctly" $ do
+            parseVar "x" `shouldBe` Variable "x"
+            parseVar "xyz" `shouldBe` Variable "xyz"
+            parseVar "xYZ" `shouldBe` Variable "xYZ"
+            parseVar "x0" `shouldBe` Variable "x0"
+            parseVar "x==1" `shouldBe` Variable "x==1"
+            parseVar "y:D" `shouldBe` Variable "y:D"
+        it "parses macro correctly" $ do
+            parseVar "X" `shouldBe` Macro "X"
+            parseVar "Xyz" `shouldBe` Macro "Xyz"
+            parseVar "XYZ" `shouldBe` Macro "XYZ"
+            parseVar "X0" `shouldBe` Macro "X0"
+            parseVar "X==1" `shouldBe` Macro "X==1"
+            parseVar "Y:D" `shouldBe` Macro "Y:D"
+            parseVar ":D" `shouldBe` Macro ":D"
+    describe "parseToken" $ do
+        it "parses token correctly" $ do
+            1 `shouldBe` 1
+        it "handles stack correctly" $ do
+            1 `shouldBe` 1
+    describe "parseStatement" $ do
         it "parses identifier" $ do
             parseStatement (tokenize "x") `shouldBe` toTerm "x"
             parseStatement (tokenize "1") `shouldBe` toTerm "1"
@@ -77,6 +98,11 @@ spec = do
         it "parses function" $ do
             parseStatement (tokenize "(\\x.x)") `shouldBe` toTerm "(\\x.x)"
             parseStatement (tokenize "(\\x y.x)") `shouldBe` toTerm "(\\x y.x)"
-        it "parses complex exxpression" $ do
-            parseStatement (tokenize "(\\x y.x x y)(\\y.y 1)(2)")
-                `shouldBe` toTerm "(\\x y.x x y)(\\y.y 1)(2)"
+        it "parses complex exxpression"
+            $          parseStatement (tokenize "(\\x y.x x y)(\\y.y 1)(2)")
+            `shouldBe` toTerm "(\\x y.x x y)(\\y.y 1)(2)"
+    describe "toString" $ do
+        it "handles existing macro" $ do
+            1 `shouldBe` 1
+        it "works without macro" $ do
+            1 `shouldBe` 1

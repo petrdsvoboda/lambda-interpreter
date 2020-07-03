@@ -2,7 +2,10 @@ module Evaluator
     ( eval
     , tmap
     , macroExpansion
+    , replace
     , betaReduction
+    , consolidateApplication
+    , consolidateAbstractions
     )
 where
 
@@ -68,7 +71,7 @@ macroExpansion macros term = case term of
   where
     expand :: String -> Maybe Term
     expand m = case (lookup macros m) of
-        Just val -> Just $ termFromString val
+        Just val -> Just $ fromString val
         Nothing  -> Nothing
     lookup :: Ord a => [(a, String)] -> a -> Maybe String
     lookup tuples x = Map.fromList tuples Map.!? x
@@ -76,6 +79,8 @@ macroExpansion macros term = case term of
 consolidateAbstractions :: Term -> Term
 consolidateAbstractions term = case term of
     Abstraction (vs, t) -> case t of
+        Abstraction (inner_vs, inner_t) ->
+            Abstraction (vs ++ inner_vs, consolidateAbstractions inner_t)
         Application [Abstraction (inner_vs, inner_t)] ->
             Abstraction (vs ++ inner_vs, consolidateAbstractions inner_t)
         Application [t] -> Abstraction (vs, t)

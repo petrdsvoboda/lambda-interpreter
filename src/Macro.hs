@@ -47,7 +47,7 @@ idToVal = idToValBase ++ numbers
   genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
   genNext (prev, acc) curr = (incByOne, acc ++ [(show curr, incByOne)])
    where
-    term     = ($!) termFromString $! "((\\x s z.s (x s z)) " ++ prev ++ ")"
+    term     = ($!) fromString $! "((\\x s z.s (x s z)) " ++ prev ++ ")"
     reduced  = ($!) betaReduction $! betaReduction $! betaReduction term
     incByOne = ($!) show reduced
 valToId = map swap idToVal

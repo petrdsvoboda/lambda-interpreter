@@ -1,8 +1,9 @@
 module Parser
   ( parse
+  , parseVar
   , parseStatement
   , exprFromString
-  , termFromString
+  , fromString
   , toString
   , append
   )
@@ -91,12 +92,12 @@ parse tokens = (term, assignTo)
 exprFromString :: String -> Expr
 exprFromString = parse . tokenize
 
-termFromString :: String -> Term
-termFromString = parseStatement . tokenize
+fromString :: String -> Term
+fromString = parseStatement . tokenize
 
 
 toString :: [SavedMacro] -> Term -> String
 toString macros term = case List.find (\(fst, _) -> term == fst) macroList of
   Just (_, m) -> m
   Nothing     -> show term
-  where macroList = map (\(fst, snd) -> (termFromString fst, snd)) macros
+  where macroList = map (\(fst, snd) -> (fromString fst, snd)) macros

@@ -1,5 +1,6 @@
 module Lexer
     ( tokenize
+    , validate
     )
 where
 
@@ -38,3 +39,20 @@ tokenize text = case id of
             Just x  -> (Just (x ++ [curr]), tokens)
     (id, tokens) = foldl addToken (Nothing, []) text
 
+validate :: [Token] -> Maybe String
+validate tokens = case (depthCheck, assignmentCheck) of
+    (False, _    ) -> Just "Mismatching brackets"
+    (_    , False) -> Just "Incorrect assignment"
+    (True , True ) -> Nothing
+  where
+    step :: Int -> Token -> Int
+    step depth token = case token of
+        Separator Begin -> depth + 1
+        Separator End   -> depth - 1
+        _               -> depth
+    depthCheck         = (foldl step 0 tokens) == 0
+    keywordAssignCount = List.length (List.filter (== Keyword Assign) tokens)
+    assignmentCheck =
+        if List.length tokens > 1 && ((tokens !! 1) == Keyword Assign)
+            then keywordAssignCount == 1
+            else keywordAssignCount == 0
