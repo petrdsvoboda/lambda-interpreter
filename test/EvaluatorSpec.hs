@@ -24,19 +24,26 @@ token = map (show . swap) expr
 toTerm :: String -> Term
 toTerm x = fromString (Map.fromList expr Map.! x)
 
-macros = Macro.idToVal
+macros = Macro.macroHeap
 
 spec :: Spec
 spec = do
     describe "macroExpansion" $ do
         it "expands correctly" $ do
             macroExpansion macros (fromString "1 1")
-                `shouldBe` Just (fromString "(\\s z.s z) 1")
+                `shouldBe` Right (fromString "(\\s z.s z) 1")
             macroExpansion macros (fromString "(\\s z.1 z)")
-                `shouldBe` Just (fromString "(\\s z.(\\s z.s z) z)")
+                `shouldBe` Right (fromString "(\\s z.(\\s z.s z) z)")
         it "ignores macros that don't need to be evaluated"
             $ macroExpansion macros (fromString "(\\s z.1 z) (\\s z.s z)")
-            `shouldBe` Just (fromString "(\\s z.1 z) (\\s z.s z)")
+            `shouldBe` Right (fromString "(\\s z.1 z) (\\s z.s z)")
+        it "returns nothing if macro not found" $ do
+            macroExpansion macros (fromString "NOTHING")
+                `shouldBe` Left "Error: Can't find macro - NOTHING"
+            macroExpansion macros (fromString "(\\x.x (y NIL))")
+                `shouldBe` Left "Error: Can't find macro - NIL"
+            macroExpansion macros (fromString "A1 A2")
+                `shouldBe` Left "Error: Can't find macro - A1"
     describe "replace" $ do
         it "replaces all selected vars" $ do
             replace "x1" (Variable "x2") (fromString "x1 x")
@@ -85,10 +92,10 @@ spec = do
         it "consolidates root term" $ do
             consolidateApplication (fromString "(x)") `shouldBe` fromString "x"
             consolidateApplication (fromString "(x (x))")
-                `shouldBe` fromString "x (x)"
-        it "doesn't consolidate innet terms" $ do
-            consolidateApplication (fromString "(x (x)) x")
-                `shouldBe` fromString "(x (x)) x"
+                `shouldBe` fromString "(x x)"
+        it "doesn't consolidate inner terms" $ do
+            consolidateApplication (fromString "(x (x x))")
+                `shouldBe` fromString "(x (x x))"
             consolidateApplication (fromString "(x (x x)) x")
                 `shouldBe` fromString "(x (x x)) x"
     describe "betaReduction" $ do

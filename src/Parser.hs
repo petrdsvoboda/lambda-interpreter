@@ -95,9 +95,13 @@ exprFromString = parse . tokenize
 fromString :: String -> Term
 fromString = parseStatement . tokenize
 
+fromStringChecked :: String -> Either String Term
+fromStringChecked string = case validate tokens of
+  Just err -> Left err
+  Nothing  -> Right $ parseStatement tokens
+  where tokens = tokenize string
 
-toString :: [SavedMacro] -> Term -> String
-toString macros term = case List.find (\(fst, _) -> term == fst) macroList of
-  Just (_, m) -> m
-  Nothing     -> show term
-  where macroList = map (\(fst, snd) -> (fromString fst, snd)) macros
+toString :: MacroHeap -> Term -> String
+toString macros term = case List.find (\(_, _, t) -> term == t) macros of
+  Just (id, _, _) -> id
+  Nothing         -> show term

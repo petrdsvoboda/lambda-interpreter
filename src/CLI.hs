@@ -24,33 +24,29 @@ log term = do
     getChar
     return ()
 
-answer :: [SavedMacro] -> EvalRes -> IO ()
-answer macros term = putStrLn $ "< " ++ res
-  where
-    t   = show term
-    x   = List.find (\(fst, _) -> t == fst) (map swap macros)
-    res = case term of
-        Right t   -> toString (map swap macros) t
-        Left  err -> err
+answer :: MacroHeap -> Either String String -> IO ()
+answer macros res = case res of
+    Right x   -> putStrLn $ "< " ++ x
+    Left  err -> putStrLn err
 
 
-compute :: ProgramFlags -> [SavedMacro] -> Term -> IO EvalRes
+compute :: ProgramFlags -> MacroHeap -> Term -> IO (Either String String)
 compute flags macros term = do
     let evaluated = eval macros term
     case evaluated of
         Right t -> if (t == term)
-            then return evaluated
+            then return (Right $ toString macros t)
             else do
                 unless (quiet flags) (CLI.log t)
                 compute flags macros t
-        _ -> return evaluated
+        Left err -> return (Left err)
 
-run :: ProgramFlags -> [SavedMacro] -> IO ()
+run :: ProgramFlags -> MacroHeap -> IO ()
 run flags macros = do
     line <- prompt
     let (term, assignTo) = exprFromString line
     let macros' = case assignTo of
-            Just x  -> macros ++ [(x, show term)]
+            Just x  -> macros ++ [(x, show term, term)]
             Nothing -> macros
     res <- compute flags macros' term
     answer macros' res

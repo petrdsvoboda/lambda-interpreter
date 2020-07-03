@@ -15,4 +15,4 @@ main = do
     args <- getArgs
     tid  <- myThreadId
     installHandler keyboardSignal (Catch (E.throwTo tid ExitSuccess)) Nothing
-    run (ProgramFlags { quiet = "-q" `elem` args }) idToVal
+    run (ProgramFlags { quiet = "-q" `elem` args }) macroHeap

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 91e359688ffd501c39378f179a7da52dafe3499c01065d618f20d6060d41d26a
+-- hash: 4b98fa13bc2f359b97ca831dda1cac018b447116fb0a3cb04cb9bab1ab4066ed
 
 name:           lambda-interpreter
 version:        0.1.0.0
@@ -70,6 +70,7 @@ test-suite lambda-interpreter-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      CLISpec
       EvaluatorSpec
       LexerSpec
       ParserSpec

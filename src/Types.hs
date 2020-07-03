@@ -4,7 +4,7 @@ module Types where
 data SeparatorToken = Begin | End deriving (Eq)
 data KeywordToken = Assign | Fn | EndFn deriving (Eq)
 data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken deriving (Eq)
-type SavedMacro = (String, String)
+type MacroHeap = [(String, String, Term)]
 
 instance Show Token where
     show (Identifier x  ) = "ID~" ++ x
@@ -59,6 +59,12 @@ instance Semigroup Term where
 instance Monoid Term where
     mempty  = Empty
     mappend = (<>)
+
+instance {-# OVERLAPPING #-} Semigroup (Either String Term) where
+    Left err1 <> Left err2 = Left (err1 ++ "\n" ++ err2)
+    Left err  <> _         = Left err
+    _         <> Left  err = Left err
+    Right x   <> Right y   = Right (x <> y)
 
 -- instance Foldable Term where
 --     foldMap f Empty                   = mempty

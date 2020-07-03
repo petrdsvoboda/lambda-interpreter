@@ -10,10 +10,12 @@ import           Test.Hspec
 import           Parser
 import           Lexer
 import           Types
+import           Macro
 
 expr :: [(String, Term)]
 expr =
-    [ ("x"    , Variable "x")
+    [ (""     , Empty)
+    , ("x"    , Variable "x")
     , ("1"    , Macro "1")
     , ("x y z", Application [Variable "x", Variable "y", Variable "z"])
     , ("TEST" , Macro "TEST")
@@ -86,6 +88,7 @@ spec = do
             1 `shouldBe` 1
     describe "parseStatement" $ do
         it "parses identifier" $ do
+            parseStatement (tokenize "") `shouldBe` toTerm ""
             parseStatement (tokenize "x") `shouldBe` toTerm "x"
             parseStatement (tokenize "1") `shouldBe` toTerm "1"
             parseStatement (tokenize "x y z") `shouldBe` toTerm "x y z"
@@ -103,6 +106,18 @@ spec = do
             `shouldBe` toTerm "(\\x y.x x y)(\\y.y 1)(2)"
     describe "toString" $ do
         it "handles existing macro" $ do
-            1 `shouldBe` 1
+            toString macroHeap (Abstraction (["t", "f"], Variable "t"))
+                `shouldBe` "T"
+            toString macroHeap (Abstraction (["s", "z"], Variable "z"))
+                `shouldBe` "0"
+            toString
+                    macroHeap
+                    (Abstraction
+                        (["s", "z"], Application [Variable "s", Variable "z"])
+                    )
+                `shouldBe` "1"
         it "works without macro" $ do
-            1 `shouldBe` 1
+            toString macroHeap (Abstraction (["x"], Variable "x"))
+                `shouldBe` "(\\x.x)"
+            toString macroHeap (Application [Variable "x", Variable "x"])
+                `shouldBe` "(x x)"

@@ -13,11 +13,7 @@ import           Chars
 import           Types
 import           Parser
 import           Lexer
-import           Debug.Trace
 import qualified Data.Map                      as Map
-
--- FIXME: (\s z.s (z)) != (\s z.s z) but should
-
 
 tmap :: (Term -> Term) -> Term -> Term
 tmap f term = case term of
@@ -51,30 +47,32 @@ replace var with term = case term of
     Application [] -> Application []
     _              -> term
 
-macroExpansion :: [SavedMacro] -> Term -> Maybe Term
+macroExpansion :: MacroHeap -> Term -> Either String Term
 macroExpansion macros term = case term of
     Abstraction (v, t) -> case inner of
-        Just t -> Just $ Abstraction (v, t)
-        _      -> Nothing
+        Right t -> Right $ Abstraction (v, t)
+        _       -> inner
       where
         inner = case t of
             Macro m -> expand m
             _       -> macroExpansion macros t
     Application (a : b : rest) -> case a of
-        Abstraction _ -> Just (Application (a : b : rest))
-        Macro m -> expand m <> Just (Application (b : rest))
-        _ -> Just a <> macroExpansion macros (Application (b : rest))
+        Abstraction _ -> Right (Application (a : b : rest))
+        Macro m -> expand m <> Right (Application (b : rest))
+        _ -> Right a <> macroExpansion macros (Application (b : rest))
     Application [t] -> case macroExpansion macros t of
-        Just inner -> Just (Application [inner])
-        Nothing    -> Nothing
-    _ -> Just term
+        Right inner -> Right (Application [inner])
+        Left  err   -> Left err
+    Macro m -> expand m
+    _       -> Right term
   where
-    expand :: String -> Maybe Term
-    expand m = case (lookup macros m) of
-        Just val -> Just $ fromString val
-        Nothing  -> Nothing
-    lookup :: Ord a => [(a, String)] -> a -> Maybe String
-    lookup tuples x = Map.fromList tuples Map.!? x
+    lookup :: String -> Maybe Term
+    lookup x =
+        Map.fromList (map (\(fst, _, trd) -> (fst, trd)) macros) Map.!? x
+    expand :: String -> Either String Term
+    expand m = case (lookup m) of
+        Just val -> Right val
+        Nothing  -> Left ("Error: Can't find macro - " ++ m)
 
 consolidateAbstractions :: Term -> Term
 consolidateAbstractions term = case term of
@@ -95,8 +93,10 @@ consolidateAbstractions term = case term of
 
 consolidateApplication :: Term -> Term
 consolidateApplication term = case term of
-    Application ([t]) -> consolidateApplication t
-    _                 -> term
+    Abstraction (vs, t) -> Abstraction (vs, consolidateApplication t)
+    Application ([t])   -> t
+    Application (ts )   -> Application (map consolidateApplication ts)
+    _                   -> term
 
 consolidate :: Term -> Term
 consolidate = consolidateApplication . consolidateAbstractions
@@ -115,14 +115,12 @@ betaReduction term = case term of
     Application [t] -> Application [betaReduction t]
     _               -> term
 
-eval :: [SavedMacro] -> Term -> EvalRes
+eval :: MacroHeap -> Term -> EvalRes
 eval macros term = case res of
     Left  _ -> res
     Right t -> Right $ consolidate t
   where
-    expanded = case macroExpansion macros term of
-        Just t  -> Right t
-        Nothing -> Left "Error: Macro expansion"
+    expanded    = macroExpansion macros term
     betaReduced = Right $ betaReduction term
     pick :: (Bool, EvalRes) -> EvalRes -> (Bool, EvalRes)
     pick acc@(found, prev) curr = if found
