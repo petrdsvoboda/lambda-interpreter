@@ -58,14 +58,24 @@ spec = do
                 `shouldBe` fromString "(\\x.x2 (\\y.x2 y))"
             replace "x1" (Variable "x2") (fromString "(\\x y.x1 x y)")
                 `shouldBe` fromString "(\\x y.x2 x y)"
+            replace "x1" (Variable "x2") (fromString "(\\x y.x1 x y)")
+                `shouldBe` fromString "(\\x y.x2 x y)"
         it "ignores rebounded vars" $ do
             replace "x1" (Variable "x2") (fromString "(\\x1.x1 x)")
                 `shouldBe` fromString "(\\x1.x1 x)"
             replace "x1" (Variable "x2") (fromString "(\\x1 y.x1 x)")
                 `shouldBe` fromString "(\\x1 y.x1 x)"
         it "replaces with complex term"
-            $ replace "x1" (fromString "(\\x.x) (y z)") (fromString "(x1 y z)")
-            `shouldBe` fromString "((\\x.x) (y z) y z)"
+            $          replace
+                           "x1"
+                           (Application [Abstraction (["x"], Variable "x")])
+                           (Application [Variable "x1", Variable "y", Variable "z"])
+            `shouldBe` (Application
+                           [ (Application [Abstraction (["x"], Variable "x")])
+                           , Variable "y"
+                           , Variable "z"
+                           ]
+                       )
         it "ignores other vars" $ do
             replace "x1" (Variable "x2") (fromString "(x y z)")
                 `shouldBe` fromString "(x y z)"
@@ -89,18 +99,60 @@ spec = do
             $          consolidateAbstractions (fromString "(\\x.(\\y.x y) x)")
             `shouldBe` fromString "(\\x.(\\y.x y) x)"
     describe "consolidateApplication" $ do
-        it "consolidates root term" $ do
-            consolidateApplication (fromString "(x)") `shouldBe` fromString "x"
-            consolidateApplication (fromString "(x (x))")
-                `shouldBe` fromString "(x x)"
+        it "correctly consolidates" $ do
+            consolidateApplication (Application [Variable "x"])
+                `shouldBe` Variable "x"
+            consolidateApplication
+                    (Application [Variable "x", Application [Variable "x"]])
+                `shouldBe` Application [Variable "x", Variable "x"]
+            consolidateApplication
+                    (Application
+                        [ Application
+                            [ Variable "x"
+                            , Application [Variable "x", Variable "x"]
+                            ]
+                        , Variable "x"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Variable "x"
+                               , Application [Variable "x", Variable "x"]
+                               , Variable "x"
+                               ]
+                           )
         it "doesn't consolidate inner terms" $ do
-            consolidateApplication (fromString "(x (x x))")
-                `shouldBe` fromString "(x (x x))"
-            consolidateApplication (fromString "(x (x x)) x")
-                `shouldBe` fromString "(x (x x)) x"
+            consolidateApplication
+                    (Application
+                        [Variable "x", Application [Variable "x", Variable "x"]]
+                    )
+                `shouldBe` (Application
+                               [ Variable "x"
+                               , Application [Variable "x", Variable "x"]
+                               ]
+                           )
+            consolidateApplication
+                    (Application
+                        [ Application
+                            [ Variable "x"
+                            , Application [Variable "x", Variable "x"]
+                            ]
+                        , Application [Variable "x", Variable "x"]
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Variable "x"
+                               , Application [Variable "x", Variable "x"]
+                               , Application [Variable "x", Variable "x"]
+                               ]
+                           )
     describe "betaReduction" $ do
         it "reduces correctly" $ do
-            1 `shouldBe` 1
+            betaReduction
+                    (fromString
+                        "((\\f n.ZERO n 1 (* n (f (- n 1)))) ((\\x.FAC (x x)) (\\x.FAC (x x))) 1)"
+                    )
+                `shouldBe` fromString
+                               "((\\n.ZERO n 1 (* n ((\\x.FAC (x x)) (\\x.FAC (x x)) (- n 1)))) 1)"
     describe "eval" $ do
         it "performs correct step" $ do
             1 `shouldBe` 1

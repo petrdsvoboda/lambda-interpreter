@@ -40,10 +40,7 @@ replace var with term = case term of
     Variable x -> if x == var then with else term
     Abstraction (vs, t) ->
         if var `elem` vs then term else Abstraction (vs, replace var with t)
-    Application (t : ts) -> case t of
-        Application _ -> Application [replace var with t]
-            <> replace var with (Application ts)
-        _ -> replace var with t <> replace var with (Application ts)
+    Application ts -> Application (map (replace var with) ts)
     Application [] -> Application []
     _              -> term
 
@@ -93,10 +90,14 @@ consolidateAbstractions term = case term of
 
 consolidateApplication :: Term -> Term
 consolidateApplication term = case term of
-    Abstraction (vs, t) -> Abstraction (vs, consolidateApplication t)
-    Application ([t])   -> t
-    Application (ts )   -> Application (map consolidateApplication ts)
-    _                   -> term
+    Abstraction (vs, t)  -> Abstraction (vs, consolidateApplication t)
+    Application (t : ts) -> Application
+        (map consolidateApplication (newT ++ ts))
+      where
+        newT = case t of
+            Application inner -> inner
+            _                 -> [t]
+    _ -> term
 
 consolidate :: Term -> Term
 consolidate = consolidateApplication . consolidateAbstractions
@@ -105,12 +106,13 @@ betaReduction :: Term -> Term
 betaReduction term = case term of
     Abstraction (v, t)         -> Abstraction (v, betaReduction t)
     Application (a : b : rest) -> case a of
-        Abstraction ((v : vs), t) -> Abstraction (vs, reduced)
-            <> Application rest
+        Abstraction ((v : vs), t) -> Application r
           where
             reduced = case b of
                 Application _ -> replace v (Application [b]) t
                 _             -> replace v b t
+            newAbs = Abstraction (vs, reduced)
+            r      = (newAbs : rest)
         _ -> a <> betaReduction (Application (b : rest))
     Application [t] -> Application [betaReduction t]
     _               -> term

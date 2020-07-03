@@ -27,7 +27,7 @@ idToValBase =
   , ("^"    , "(\\x y.y x)")
   , ("0"    , "(\\s z.z)")
   , ("ZERO" , "(\\n.n (\\x.F)T)")
-  , ("Y"    , "(\\f.(\\x.f x x) (\\x.f x x))")
+  , ("Y"    , "(\\f.(\\x.f (x x)) (\\x.f (x x)))")
   , ("FAC"  , "(\\f n.ZERO n 1 (* n (f (- n 1))))")
   ]
 
