@@ -4,11 +4,13 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2c056327227be9ad7de8848de5f1f367aac1f374614a238cecfb32e1a7c4d813
+-- hash: 443438acf6966e5dd0ecb34f9fcd7551a4563c9cc63203272410d20ff6f4fa7d
 
 name:           lambda-interpreter
 version:        0.1.0.0
+synopsis:       Simple CLI lambda calculus interpreter
 description:    Please see the README on GitHub at <https://gitlab.fit.cvut.cz/svobop51/mi-afp#readme>
+category:       LambdaCalculus
 homepage:       https://github.com/https://gitlab.fit.cvut.cz/svobop51/mi-afp#readme
 bug-reports:    https://github.com/https://gitlab.fit.cvut.cz/svobop51/mi-afp/issues
 author:         Author name here
