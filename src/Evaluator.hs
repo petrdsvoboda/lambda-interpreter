@@ -28,7 +28,7 @@ import qualified Data.List                     as List
 
 -- | Expand macro that is target of next application
 -- Fails if macro is not defined
-macroExpansion :: MacroHeap -> Term -> Either String Term
+macroExpansion :: MacroHeap -> Term -> EvalRes
 macroExpansion macros term = case term of
     Abstraction (v, t) -> case macroExpansion macros t of
         Right inner -> Right $ Abstraction (v, inner)
@@ -47,7 +47,7 @@ macroExpansion macros term = case term of
     lookup :: String -> Maybe Term
     lookup x =
         Map.fromList (map (\(fst, _, trd) -> (fst, trd)) macros) Map.!? x
-    expand :: String -> Either String Term
+    expand :: String -> EvalRes
     expand m = case (lookup m) of
         Just val -> Right val
         Nothing  -> Left ("Error: Can't find macro - " ++ m)
