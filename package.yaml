@@ -26,6 +26,7 @@ dependencies:
   - ansi-terminal
   - hspec
   - hspec-discover
+  - QuickCheck
 
 library:
   source-dirs: src

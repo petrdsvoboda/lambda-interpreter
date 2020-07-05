@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4b98fa13bc2f359b97ca831dda1cac018b447116fb0a3cb04cb9bab1ab4066ed
+-- hash: 868c14041350fcafce048777942bb6b3bce04728a009946953ffc027e81f9235
 
 name:           lambda-interpreter
 version:        0.1.0.0
@@ -41,7 +41,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      ansi-terminal
+      QuickCheck
+    , ansi-terminal
     , base >=4.7 && <5
     , containers
     , hspec
@@ -57,7 +58,8 @@ executable lambda-interpreter-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      ansi-terminal
+      QuickCheck
+    , ansi-terminal
     , base >=4.7 && <5
     , containers
     , hspec
@@ -80,7 +82,8 @@ test-suite lambda-interpreter-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      ansi-terminal
+      QuickCheck
+    , ansi-terminal
     , base >=4.7 && <5
     , containers
     , hspec
