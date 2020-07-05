@@ -149,13 +149,18 @@ spec = do
         it "converts correctly" $ do
             alphaConversion
                     (Application
-                        [ Abstraction (["x"], Abstraction (["x"], Variable "x"))
+                        [ Abstraction
+                            ( ["x", "y"]
+                            , Application [Variable "x", Variable "y"]
+                            )
                         , Variable "y"
                         ]
                     )
                 `shouldBe` (Application
                                [ Abstraction
-                                   (["x"], Abstraction (["x_"], Variable "x_"))
+                                   ( ["x", "y_"]
+                                   , Application [Variable "x", Variable "y_"]
+                                   )
                                , Variable "y"
                                ]
                            )
@@ -163,10 +168,57 @@ spec = do
                     (Application
                         [ Abstraction
                             ( ["x", "y"]
+                            , Application [Variable "x", Variable "y"]
+                            )
+                        , Application [Variable "x", Variable "y"]
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                   ( ["x", "y_"]
+                                   , Application [Variable "x", Variable "y_"]
+                                   )
+                               , Application [Variable "x", Variable "y"]
+                               ]
+                           )
+
+        it "handles not shared vars" $ do
+            alphaConversion
+                    (Application
+                        [ Abstraction
+                            ( ["x", "y"]
                             , Abstraction
-                                ( ["x", "y"]
+                                ( ["a", "b"]
+                                , Application [Variable "x", Variable "b"]
+                                )
+                            )
+                        , Variable "b"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                   ( ["x", "y"]
+                                   , Abstraction
+                                       ( ["a", "b"]
+                                       , Application
+                                           [Variable "x", Variable "b"]
+                                       )
+                                   )
+                               , Variable "b"
+                               ]
+                           )
+            alphaConversion
+                    (Application
+                        [ Abstraction
+                            ( ["x", "y"]
+                            , Abstraction
+                                ( ["y", "z"]
                                 , Application
-                                    [Variable "x", Variable "y", Variable "y"]
+                                    [ Variable "x"
+                                    , Variable "y"
+                                    , Variable "z"
+                                    , Variable "z"
+                                    ]
                                 )
                             )
                         , Variable "y"
@@ -174,46 +226,34 @@ spec = do
                     )
                 `shouldBe` (Application
                                [ Abstraction
-                                   ( ["x", "y"]
+                                   ( ["x", "y_"]
                                    , Abstraction
-                                       ( ["x_", "y_"]
+                                       ( ["y", "z"]
                                        , Application
-                                           [ Variable "x_"
-                                           , Variable "y_"
-                                           , Variable "y_"
+                                           [ Variable "x"
+                                           , Variable "y"
+                                           , Variable "z"
+                                           , Variable "z"
                                            ]
                                        )
                                    )
                                , Variable "y"
                                ]
                            )
-        it "handles not shared vars"
+        it "doesn't convert single applications"
             $          alphaConversion
                            (Application
                                [ Abstraction
-                                   ( ["x", "y"]
-                                   , Abstraction
-                                       ( ["x", "z"]
-                                       , Application
-                                           [Variable "x", Variable "z", Variable "z"]
-                                       )
-                                   )
-                               , Variable "y"
+                                     ( ["x", "y"]
+                                     , Application [Variable "x", Variable "y"]
+                                     )
                                ]
                            )
             `shouldBe` (Application
                            [ Abstraction
-                               ( ["x", "y"]
-                               , Abstraction
-                                   ( ["z", "x_"]
-                                   , Application
-                                       [ Variable "x_"
-                                       , Variable "z"
-                                       , Variable "z"
-                                       ]
-                                   )
-                               )
-                           , Variable "y"
+                                 ( ["x", "y"]
+                                 , Application [Variable "x", Variable "y"]
+                                 )
                            ]
                        )
     describe "betaReduction" $ do

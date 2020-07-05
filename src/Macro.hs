@@ -26,6 +26,7 @@ idToValBase =
   , ("*"    , "(\\x y s.x (y s))")
   , ("^"    , "(\\x y.y x)")
   , ("0"    , "(\\s z.z)")
+  , ("1"    , "(\\s z.s z)")
   , ("ZERO" , "(\\n.n (\\x.F)T)")
   , ("Y"    , "(\\f.(\\x.f (x x)) (\\x.f (x x)))")
   , ("FAC"  , "(\\f n.ZERO n 1 (* n (f (- n 1))))")
@@ -35,7 +36,7 @@ idToVal :: [(String, String)]
 idToVal = idToValBase ++ numbers
  where
   numbers :: [(String, String)]
-  (_, numbers) = ($!) foldl genNext ("(\\s z.z)", []) [1 .. 100]
+  (_, numbers) = ($!) foldl genNext ("(\\s z.s z)", []) [2 .. 120]
   genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
   genNext (prev, acc) curr = (incByOne, acc ++ [(show curr, incByOne)])
    where

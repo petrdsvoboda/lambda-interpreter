@@ -60,6 +60,12 @@ instance Monoid Term where
     mempty  = Empty
     mappend = (<>)
 
+
+-- instance {-# OVERLAPPING #-} Semigroup (Maybe Term) where
+--     Nothing <> _       = Nothing
+--     _       <> Nothing = Nothing
+--     Just a  <> Just b  = Just (a <> b)
+
 instance {-# OVERLAPPING #-} Semigroup (Either String Term) where
     Left err1 <> Left err2 = Left (err1 ++ "\n" ++ err2)
     Left err  <> _         = Left err

@@ -31,31 +31,31 @@ spec = do
     describe "compute" $ do
         it "computes basic arithmetic" $ do
             1 `shouldBe` 1
-        --     let input = fromString "+ 1 1"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "2"
-        --     let input = fromString "+ 12 23"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "35"
-        --     let input = fromString "- 17 3"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "14"
-        --     let input = fromString "* 4 6"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "24"
-        --     let input = fromString "^ 3 3"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "27"
-        -- it "handles Y Combinator" $ do
-        --     let input = fromString "Y FAC 0"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "1"
-        --     let input = fromString "Y FAC 1"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "1"
-        --     let input = fromString "Y FAC 2"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "2"
-        --     let input = fromString "Y FAC 5"
-        --     res <- compute (ProgramFlags { quiet = True }) macros input
-        --     res `shouldBe` Right "120"
+            let input = fromString "+ 1 1"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "2"
+            let input = fromString "+ 12 23"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "35"
+            let input = fromString "- 17 3"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "14"
+            let input = fromString "* 4 6"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "24"
+            let input = fromString "^ 3 3"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "27"
+        it "handles Y Combinator" $ do
+            let input = fromString "Y FAC 0"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "1"
+            let input = fromString "Y FAC 1"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "1"
+            let input = fromString "Y FAC 2"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "2"
+            let input = fromString "Y FAC 5"
+            res <- compute (ProgramFlags { quiet = True }) macros input
+            res `shouldBe` Right "120"

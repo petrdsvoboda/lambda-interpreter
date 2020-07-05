@@ -1,6 +1,5 @@
 module Evaluator
     ( eval
-    , tmap
     , macroExpansion
     , replace
     , alphaConversion
@@ -17,25 +16,14 @@ import           Lexer
 import qualified Data.Map                      as Map
 import qualified Data.List                     as List
 
-tmap :: (Term -> Term) -> Term -> Term
-tmap f term = case term of
-    Empty                -> Empty
-    Application ([]    ) -> Application []
-    Application (t : ts) -> applied <> tmap f (Application ts)
-      where
-        applied = case t of
-            Application _ -> Application [tmap f t]
-            _             -> tmap f t
-    Abstraction (v, t) -> Abstraction (v, tmap f t)
-    _                  -> f term
+import           Debug.Trace
 
--- tfold :: (Term -> Term) -> String -> Term -> Term
--- tfold f v t = case t of
---     Empty              -> Empty
---     Application (a, b) -> tfold f v a <> tfold f v b
---     Abstraction (inner_v, inner_t) ->
---         if inner_v == v then t else Abstraction (inner_v, tfold f v inner_t)
---     _ -> f t
+apply :: (Term -> Term) -> Term -> Term
+apply f term = case term of
+    Abstraction (v, t)     -> Abstraction (v, apply f t)
+    Application []         -> Application []
+    Application (a : rest) -> Application (f a : rest)
+    _                      -> term
 
 replace :: String -> Term -> Term -> Term
 replace var with term = case term of
@@ -106,8 +94,8 @@ consolidate = consolidateApplication . consolidateAbstractions
 
 betaReduction :: Term -> Term
 betaReduction term = case term of
-    Abstraction (v, t)         -> Abstraction (v, betaReduction t)
-    Application (a : b : rest) -> case a of
+    Abstraction (v, t)            -> Abstraction (v, betaReduction t)
+    Application ts@(a : b : rest) -> case a of
         Abstraction ((v : vs), t) -> Application r
           where
             reduced = case b of
@@ -115,35 +103,44 @@ betaReduction term = case term of
                 _             -> replace v b t
             newAbs = Abstraction (vs, reduced)
             r      = (newAbs : rest)
-        _ -> a <> betaReduction (Application (b : rest))
+        _ -> Application (map (betaReduction) ts)
     Application [t] -> Application [betaReduction t]
     _               -> term
 
-
+toIds :: Term -> [String]
+toIds term = case term of
+    Application ts -> concat $ map toIds ts
+    Variable    t  -> [t]
+    _              -> []
 
 alphaConversion :: Term -> Term
-alphaConversion term = case term of
-    Abstraction (v, t)     -> Abstraction (v, alphaConversion t)
-    Application (a : rest) -> case a of
-        Abstraction (vs, t) -> Application (transformed : rest)
-            where transformed = Abstraction (vs, transform vs t)
-        _ -> Application (map alphaConversion rest)
-    Application [] -> Application []
-    _              -> term
+alphaConversion term = perform term
   where
-    transform :: [String] -> Term -> Term
-    transform vars term = case term of
-        Abstraction (vs, t) -> if not $ null shared
-            then (Abstraction (notShared ++ map snd mapping, replaced))
-            else term
-          where
-            shared    = List.intersect vars vs
-            notShared = vs List.\\ vars
-            mapping   = map ((\x -> (x, x ++ "_"))) shared
-            getEl x = Variable $ (Map.fromList mapping) Map.! x
-            replaced = foldl ((\acc x -> replace x (getEl x) acc)) t shared
-        Application ts -> Application (map (transform vars) ts)
-        _              -> term
+    perform :: Term -> Term
+    perform term = case term of
+        Abstraction (vs, t)           -> Abstraction (vs, perform t)
+        Application ts@(a : b : rest) -> case a of
+            Abstraction (vs, t) -> Application (transformed : b : rest)
+              where
+                ids         = toIds b
+                transformed = transform ids a
+            _ -> Application (map (perform) ts)
+        Application [t] -> Application [perform t]
+        _               -> term
+      where
+        transform :: [String] -> Term -> Term
+        transform vars term = case term of
+            Abstraction (vs, t) -> if null shared
+                then term
+                else (Abstraction (notShared ++ map snd mapping, replaced))
+              where
+                shared    = List.intersect vars (List.tail vs)
+                notShared = vs List.\\ shared
+                mapping   = map ((\x -> (x, x ++ "_"))) shared
+                getEl x = Variable $ (Map.fromList mapping) Map.! x
+                replaced = foldl ((\acc x -> replace x (getEl x) acc)) t shared
+            Application ts -> Application (map (transform vars) ts)
+            _              -> term
 
 eval :: MacroHeap -> Term -> EvalRes
 eval macros term = case res of
