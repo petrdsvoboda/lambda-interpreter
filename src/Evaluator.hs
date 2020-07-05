@@ -15,13 +15,6 @@ import           EvaluatorHelpers
 import qualified Data.Map                      as Map
 import qualified Data.List                     as List
 
-apply :: (Term -> Term) -> Term -> Term
-apply f term = case term of
-    Abstraction (v, t)     -> Abstraction (v, apply f t)
-    Application []         -> Application []
-    Application (a : rest) -> Application (f a : rest)
-    _                      -> term
-
 macroExpansion :: MacroHeap -> Term -> Either String Term
 macroExpansion macros term = case term of
     Abstraction (v, t) -> case inner of

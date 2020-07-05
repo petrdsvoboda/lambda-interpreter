@@ -62,11 +62,9 @@ instance Semigroup Term where
     (<>) a                     (Abstraction ([], t)) = a <> t
     (<>) a                     b                     = Application [a, b]
 
-
 instance Monoid Term where
     mempty  = Empty
     mappend = (<>)
-
 
 instance {-# OVERLAPPING #-} Semigroup (Maybe Term) where
     Nothing <> _       = Nothing
@@ -78,38 +76,3 @@ instance {-# OVERLAPPING #-} Semigroup (Either String Term) where
     Left err  <> _         = Left err
     _         <> Left  err = Left err
     Right x   <> Right y   = Right (x <> y)
-
--- instance Foldable Term where
---     foldMap f Empty                   = mempty
---     foldMap f (  Application (a, b )) = foldMap f a <> foldMap f b
---     foldMap f t@(Abstraction (v, t2)) = foldMap f a <> foldMap f b
---     foldMap f t                       = f t
-
--- instance Functor Term where
---     fmap f x = case x of
---         Empty                -> Empty
---         (Variable    v     ) -> Variable (f v)
---         (Application (a, b)) -> fmap f a <> fmap f b
---         t                    -> f t
-
--- instance Applicative Term where
---     pure = Variable
---     (<*>) _  Empty = Empty
---     (<*>) ft xs    = case ft of
---         Empty              -> Empty
---         Macro       m      -> Macro m
---         Variable    f      -> fmap f xs
---         Application (a, b) -> Application (a <*> xs, b <*> xs)
---         Abstraction (v, t) -> t <*> xs
-
-
--- instance Monad Term where
---     (>>=) Empty f = Empty
---     (>>=) x     f = case x of
---         Empty                -> Empty
---         (Macro       m     ) -> Macro m
---         (Variable    v     ) -> f v
---         (Application (a, b)) -> Application (a >>= f, b >>= f)
---         (Abstraction (v, t)) -> t >>= f
-
-

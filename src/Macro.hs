@@ -9,11 +9,13 @@ Portability : POSIX
 
 Frequently used macros
 -}
+ {-# LANGUAGE BangPatterns  #-}
 module Macro
   ( macroHeap
   )
 where
 
+import qualified Data.List                     as List
 import qualified Data.Map                      as Map
 import           Data.Tuple                     ( swap )
 import           Types
@@ -50,7 +52,7 @@ idToVal = idToValBase ++ numbers
  where
   -- | Generates numbers in sequence
   numbers :: [(String, String)]
-  (_, numbers) = ($!) foldl genNext ("(\\s z.s z)", []) [2 .. 120]
+  (_, numbers) = ($!) List.foldl' genNext ("(\\s z.s z)", []) [2 .. 200]
   genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
   genNext (prev, acc) curr = (incByOne, acc ++ [(show curr, incByOne)])
    where
