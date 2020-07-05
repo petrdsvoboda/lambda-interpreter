@@ -2,6 +2,8 @@
 :toc:
 :stem: latexmath
 
+== Task
+
 Implement λ-calculus interpreter supporting:
 
 . loading of λ-expressions by user,
@@ -12,7 +14,7 @@ Interpreter has to understand basics of λ-calcul:
 * encapsulation, abstraction, application
 * free and bound variables
 * beta reduction
-* eta reduction
+* alpha conversion
 * normal order reduction and normal form (no further reductions possible)
 
 It has to be able to solve at least factorial of 5 or similiarly difficult expression (`++ Y (λfn. zero n 1 (* n f (- n 1))) 5 ++`).
@@ -23,18 +25,67 @@ Implement CLI:
 * starting up cli will open enviroment for user input,
 * each line either assignment of expression to symbolic name or application
 
-Example:
+== Syntax
+
+* Use \ and . to symbolize abstraction - `(\x.x)`
+** Wrongly typed expressions will throw errors
+* There are some basic defined macros - `+, -, *, ^, TRUE, FALSE, Y, FAC, ...`
+** Accessing non defined macros will throw errors
+** User can define 'macros' on runtime - `X = 1`
+** There are defined number macros up to 120
+* Program supports quiet and normal mode
+** Normal - every step is written down and user has to step manually
+** Quiet - program writes down only answer
+
+== Example
 
 ```
-user@pc > lci
-> 1 = (λs.(λz. (s z)))
-> 1
-(λs.(λz. (s z)))
-> add = (λx.(λy.(λs.(λz. x s (y s z)))))
-> add 1 1
-(λx.(λy.(λs.(λz. x s (y s z))))) (λs.(λz. (s z))) (λs.(λz. (s z)))
-(λy.(λs.(λz. (λs.(λz. (s z))) s (y s z)))) (λs.(λz. (s z)))
-(λs.(λz. (λs.(λz. (s z))) s ((λs.(λz. (s z))) s z))
+stack exec -- lambda-interpreter-exe
+> + 1 1
+((\x y s z.x s (y s z)) 1 1)
+((\y s z.1 s (y s z)) 1)
+((\s z.1 s (1 s z)))
+((\s z.(\s z.s z) s (1 s z)))
+((\s z.(\z.s z) (1 s z)))
+((\s z.s (1 s z)))
+((\s z.s ((\s z.s z) s z)))
+((\s z.s ((\z.s z) z)))
+((\s z.s (s z)))
+< 2
+> ADD1 = + 1
+((\x y s z.x s (y s z)) 1)
+((\y s z.1 s (y s z)))
+((\y s z.(\s z.s z) s (y s z)))
+((\y s z.(\z.s z) (y s z)))
+((\y s z.s (y s z)))
+< SUCC
+> ADD1 2
+(+ 1 2)
+((\x y s z.x s (y s z)) 1 2)
 ...
-(λs.(λz. (s (s z))))
+((\s z.s (s (s z))))
+< 3
+Ctrl+C
+
+stack exec -- lambda-interpreter-exe -q
+> + 23 12
+< 35
+> - 76 34
+< 42
+> * 12 5
+< 60
+> ^ 2 6
+< 64
+> Y FAC 4
+< 24
+> + X 1
+Error: Can't find macro - X
+> X = 2
+< 2
+> + X 2
+< 4
+> (+ 1
+Error: Mismatching brackets
+> X = + 1 1=
+Error: Incorrect assignment
 ```

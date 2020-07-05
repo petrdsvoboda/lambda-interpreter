@@ -52,7 +52,7 @@ idToVal = idToValBase ++ numbers
  where
   -- | Generates numbers in sequence
   numbers :: [(String, String)]
-  (_, numbers) = ($!) List.foldl' genNext ("(\\s z.s z)", []) [2 .. 200]
+  (_, numbers) = ($!) List.foldl' genNext ("(\\s z.s z)", []) [2 .. 120]
   genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
   genNext (prev, acc) curr = (incByOne, acc ++ [(show curr, incByOne)])
    where
