@@ -17,8 +17,8 @@ Interpreter has to understand basics of λ-calcul:
 * alpha conversion
 * normal order reduction and normal form (no further reductions possible)
 
-It has to be able to solve at least factorial of 5 or similiarly difficult expression (`++ Y (λfn. zero n 1 (* n f (- n 1))) 5 ++`).
-Support interpreting step-by-step (one application of reduction) and expansion of symbolic names  (`zero`, `Y`, `1`, ...).
+It has to be able to solve at least factorial of 5 or similiarly difficult expression (`Y (\\f n. ZERO n 1 (* n f (- n 1))) 5`).
+Support interpreting step-by-step (one application of reduction) and expansion of symbolic names  (`ZERO`, `Y`, `1`, ...).
 
 Implement CLI:
 
@@ -29,10 +29,13 @@ Implement CLI:
 
 * Use \ and . to symbolize abstraction - `(\x.x)`
 ** Wrongly typed expressions will throw errors
+** Abstraction support multiple arguments - `(\x y.x y)`, they have to be separated by whitespace
 * There are some basic defined macros - `+, -, *, ^, TRUE, FALSE, Y, FAC, ...`
 ** Accessing non defined macros will throw errors
 ** User can define 'macros' on runtime - `X = 1`
 ** There are defined number macros up to 120
+** Macros have defined special equality - `(\x.x) == `(\y.y)`, names are ignored and only structure is used, this helps with evaluation of result of `^` operator
+* Variables have to start with lowercase letter, other expressions are identified as macrosv
 * Program supports quiet and normal mode
 ** Normal - every step is written down and user has to step manually
 ** Quiet - program writes down only answer
