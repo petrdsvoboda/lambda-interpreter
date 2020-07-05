@@ -1,9 +1,6 @@
  {-# LANGUAGE FlexibleInstances #-}
 module Types where
 
-import           Test.QuickCheck
-import           Control.Monad
-
 data SeparatorToken = Begin | End deriving (Eq)
 data KeywordToken = Assign | Fn | EndFn deriving (Eq)
 data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken deriving (Eq)
@@ -65,44 +62,16 @@ instance Semigroup Term where
     (<>) a                     (Abstraction ([], t)) = a <> t
     (<>) a                     b                     = Application [a, b]
 
-instance Arbitrary Term where
-    arbitrary = do
-        depth <- choose (0, 3)
-        arbitrary' depth
-      where
-        arbitrary' :: Integer -> Gen Term
-        arbitrary' depth = if depth > 0
-            then oneof [empty, var, abs, ap]
-            else return Empty
-          where
-            empty = return Empty
-            var   = do
-                len <- (choose (1, 3)) :: Gen Integer
-                var <- sequence [ elements ['a' .. 'z'] | _ <- [0 .. len] ]
-                return $ Variable var
-            abs = do
-                len <- (choose (1, 3)) :: Gen Integer
-                let genVar =
-                        sequence [ elements ['a' .. 'z'] | _ <- [0 .. len] ]
-                varLen <- (choose (1, 3)) :: Gen Integer
-                vars   <- sequence [ genVar | _ <- [0 .. varLen] ]
-                t      <- arbitrary' (depth - 1)
-                return $ Abstraction (vars, t)
-            ap = do
-                len <- (choose (1, 5)) :: Gen Integer
-                ts  <- sequence [ arbitrary' (depth - 1) | _ <- [0 .. len] ]
-                return $ Application ts
-
 
 instance Monoid Term where
     mempty  = Empty
     mappend = (<>)
 
 
--- instance {-# OVERLAPPING #-} Semigroup (Maybe Term) where
---     Nothing <> _       = Nothing
---     _       <> Nothing = Nothing
---     Just a  <> Just b  = Just (a <> b)
+instance {-# OVERLAPPING #-} Semigroup (Maybe Term) where
+    Nothing <> _       = Nothing
+    _       <> Nothing = Nothing
+    Just a  <> Just b  = Just (a <> b)
 
 instance {-# OVERLAPPING #-} Semigroup (Either String Term) where
     Left err1 <> Left err2 = Left (err1 ++ "\n" ++ err2)

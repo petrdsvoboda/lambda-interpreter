@@ -7,9 +7,38 @@ import qualified Data.Map                      as Map
 import           Data.Tuple                     ( swap )
 import           Test.Hspec
 import           Test.QuickCheck
+import           Control.Monad
 
 import           Types
 import           Parser
+
+instance Arbitrary Term where
+    arbitrary = do
+        depth <- choose (0, 3)
+        arbitrary' depth
+      where
+        arbitrary' :: Integer -> Gen Term
+        arbitrary' depth = if depth > 0
+            then oneof [empty, var, abs, ap]
+            else return Empty
+          where
+            empty = return Empty
+            var   = do
+                len <- (choose (1, 3)) :: Gen Integer
+                var <- sequence [ elements ['a' .. 'z'] | _ <- [0 .. len] ]
+                return $ Variable var
+            abs = do
+                len <- (choose (1, 3)) :: Gen Integer
+                let genVar =
+                        sequence [ elements ['a' .. 'z'] | _ <- [0 .. len] ]
+                varLen <- (choose (1, 3)) :: Gen Integer
+                vars   <- sequence [ genVar | _ <- [0 .. varLen] ]
+                t      <- arbitrary' (depth - 1)
+                return $ Abstraction (vars, t)
+            ap = do
+                len <- (choose (1, 5)) :: Gen Integer
+                ts  <- sequence [ arbitrary' (depth - 1) | _ <- [0 .. len] ]
+                return $ Application ts
 
 prop_SemigroupAssociative :: Term -> Term -> Term -> Bool
 prop_SemigroupAssociative x y z = (x <> y) <> z == x <> (y <> z)

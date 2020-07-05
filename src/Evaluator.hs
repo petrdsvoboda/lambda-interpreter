@@ -8,7 +8,6 @@ module Evaluator
     )
 where
 
-import           Chars
 import           Types
 import           Parser
 import           Lexer

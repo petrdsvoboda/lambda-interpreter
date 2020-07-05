@@ -25,12 +25,9 @@ import qualified Data.List                     as List
 import           Data.List.Split
 import qualified Data.Char                     as Char
 import qualified Data.Stack                    as Stack
-import           Chars
 import           Types
 import           Lexer
 import           EvaluatorHelpers
-
-import           Debug.Trace
 
 
 -- | Appends to Application preserving structure of appended term
