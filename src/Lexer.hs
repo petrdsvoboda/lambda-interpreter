@@ -35,31 +35,25 @@ tokenMap = Map.fromList
 tokenize :: String -> [Token]
 tokenize text = case id of
   Nothing -> tokens
-  Just x  -> tokens ++ [Identifier x] -- ^ Don't forget to add the last identifier
+  Just x  -> tokens ++ [Identifier x] -- Don't forget to add the last identifier
  where
-    -- | Keywords
+  -- | Keywords
   charsSplit      = map fst (Map.toList tokenMap)
   -- | Chars to ignore
   charsWhitespace = [' ', '\n', '\t']
   -- | Parses token to previous structure
   addToken :: (Maybe String, [Token]) -> Char -> (Maybe String, [Token])
   addToken (prev, tokens) curr
-    |
-   -- | Identify keyword, create identifier
-      curr `elem` charsSplit = case prev of
+    | curr `elem` charsSplit = case prev of -- Identify keyword, create identifier
       Nothing -> (Nothing, tokens ++ [tokenMap Map.! curr])
       Just x  -> (Nothing, tokens ++ [Identifier x, tokenMap Map.! curr])
-    |
-   -- | Identify whitespace, create identifier
-      curr `elem` charsWhitespace = case prev of
+    | curr `elem` charsWhitespace = case prev of -- Identify whitespace, create identifier
       Nothing -> (Nothing, tokens)
       Just x  -> (Nothing, tokens ++ [Identifier x])
-    |
-   -- | Identify other char, add it to future identifier
-      otherwise = case prev of
+    | otherwise = case prev of -- Identify other char, add it to future identifier
       Nothing -> (Just [curr], tokens)
       Just x  -> (Just (x ++ [curr]), tokens)
-   -- | Classify all characters
+  -- | Classify all characters
   (id, tokens) = foldl addToken (Nothing, []) text
 
 -- | Validate found token and return errors

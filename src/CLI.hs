@@ -1,3 +1,14 @@
+{-|
+Module      : CLI
+Description : CLI for evaluation
+Copyright   : (c) Petr Svoboda, 2020
+License     : GPL-3
+Maintainer  : svobop51@fit.cvut.cz
+Stability   : experimental
+Portability : POSIX
+
+Command line interface for evaluation of user input
+-}
 module CLI where
 
 import           System.IO
@@ -32,6 +43,7 @@ answer macros res = case res of
     Left  err -> putStrLn err
 
 
+-- | Computes result of user provided input
 compute :: ProgramFlags -> MacroHeap -> Term -> IO ProgramStep
 compute flags macros term = do
     let evaluated = eval macros term
@@ -50,8 +62,7 @@ run :: ProgramFlags -> MacroHeap -> IO ()
 run flags macros = do
     line <- prompt
     let input = fromStringChecked line
-    -- | Evaluate user input and provide response
-    case input of
+    case input of -- Evaluate user input and provide response
         Left err -> do
             putStrLn ("Error: " ++ err)
             run flags macros

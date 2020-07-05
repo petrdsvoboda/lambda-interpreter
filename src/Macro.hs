@@ -1,3 +1,14 @@
+{-|
+Module      : Macro
+Description : Predefined macros
+Copyright   : (c) Petr Svoboda, 2020
+License     : GPL-3
+Maintainer  : svobop51@fit.cvut.cz
+Stability   : experimental
+Portability : POSIX
+
+Frequently used macros
+-}
 module Macro
   ( macroHeap
   )
@@ -9,6 +20,7 @@ import           Types
 import           Parser
 import           Evaluator
 
+-- | Basic macros lookup table
 idToValBase :: [(String, String)]
 idToValBase =
   [ ("SUCC" , "(\\x s z.s (x s z))")
@@ -32,9 +44,11 @@ idToValBase =
   , ("FALSE", "(\\t f.f)")
   ]
 
+-- | Basic macros with auto generated numbers
 idToVal :: [(String, String)]
 idToVal = idToValBase ++ numbers
  where
+  -- | Generates numbers in sequence
   numbers :: [(String, String)]
   (_, numbers) = ($!) foldl genNext ("(\\s z.s z)", []) [2 .. 120]
   genNext :: (String, [(String, String)]) -> Int -> (String, [(String, String)])
@@ -44,5 +58,6 @@ idToVal = idToValBase ++ numbers
     reduced  = ($!) betaReduction $! betaReduction $! betaReduction term
     incByOne = ($!) show reduced
 
+-- | Expands macro lookup table with evaluated term for quicker comparison
 macroHeap :: MacroHeap
 macroHeap = ($!) map (\(fst, snd) -> (fst, snd, ($!) fromString snd)) idToVal
