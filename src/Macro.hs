@@ -44,4 +44,4 @@ idToVal = idToValBase ++ numbers
     incByOne = ($!) show reduced
 
 macroHeap :: MacroHeap
-macroHeap = ($!) map (\(fst, snd) -> (fst, snd, fromString snd)) idToVal
+macroHeap = ($!) map (\(fst, snd) -> (fst, snd, ($!) fromString snd)) idToVal

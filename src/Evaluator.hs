@@ -3,6 +3,7 @@ module Evaluator
     , tmap
     , macroExpansion
     , replace
+    , alphaConversion
     , betaReduction
     , consolidateApplication
     , consolidateAbstractions
@@ -14,6 +15,7 @@ import           Types
 import           Parser
 import           Lexer
 import qualified Data.Map                      as Map
+import qualified Data.List                     as List
 
 tmap :: (Term -> Term) -> Term -> Term
 tmap f term = case term of
@@ -41,7 +43,6 @@ replace var with term = case term of
     Abstraction (vs, t) ->
         if var `elem` vs then term else Abstraction (vs, replace var with t)
     Application ts -> Application (map (replace var with) ts)
-    Application [] -> Application []
     _              -> term
 
 macroExpansion :: MacroHeap -> Term -> Either String Term
@@ -91,6 +92,7 @@ consolidateAbstractions term = case term of
 consolidateApplication :: Term -> Term
 consolidateApplication term = case term of
     Abstraction (vs, t)  -> Abstraction (vs, consolidateApplication t)
+    Application []       -> Application []
     Application (t : ts) -> Application
         (map consolidateApplication (newT ++ ts))
       where
@@ -117,12 +119,39 @@ betaReduction term = case term of
     Application [t] -> Application [betaReduction t]
     _               -> term
 
+
+
+alphaConversion :: Term -> Term
+alphaConversion term = case term of
+    Abstraction (v, t)     -> Abstraction (v, alphaConversion t)
+    Application (a : rest) -> case a of
+        Abstraction (vs, t) -> Application (transformed : rest)
+            where transformed = Abstraction (vs, transform vs t)
+        _ -> Application (map alphaConversion rest)
+    Application [] -> Application []
+    _              -> term
+  where
+    transform :: [String] -> Term -> Term
+    transform vars term = case term of
+        Abstraction (vs, t) -> if not $ null shared
+            then (Abstraction (notShared ++ map snd mapping, replaced))
+            else term
+          where
+            shared    = List.intersect vars vs
+            notShared = vs List.\\ vars
+            mapping   = map ((\x -> (x, x ++ "_"))) shared
+            getEl x = Variable $ (Map.fromList mapping) Map.! x
+            replaced = foldl ((\acc x -> replace x (getEl x) acc)) t shared
+        Application ts -> Application (map (transform vars) ts)
+        _              -> term
+
 eval :: MacroHeap -> Term -> EvalRes
 eval macros term = case res of
     Left  _ -> res
     Right t -> Right $ consolidate t
   where
     expanded    = macroExpansion macros term
+    converted   = Right $ alphaConversion term
     betaReduced = Right $ betaReduction term
     pick :: (Bool, EvalRes) -> EvalRes -> (Bool, EvalRes)
     pick acc@(found, prev) curr = if found
@@ -130,4 +159,5 @@ eval macros term = case res of
         else case curr of
             Right t -> if curr == prev then (False, curr) else (True, curr)
             Left  _ -> (True, curr)
-    (_, res) = foldl pick (False, Right term) [expanded, betaReduced]
+    (_, res) =
+        foldl pick (False, Right term) [expanded, converted, betaReduced]

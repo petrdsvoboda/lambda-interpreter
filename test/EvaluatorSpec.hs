@@ -145,14 +145,183 @@ spec = do
                                , Application [Variable "x", Variable "x"]
                                ]
                            )
+    describe "alphaConversion" $ do
+        it "converts correctly" $ do
+            alphaConversion
+                    (Application
+                        [ Abstraction (["x"], Abstraction (["x"], Variable "x"))
+                        , Variable "y"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                   (["x"], Abstraction (["x_"], Variable "x_"))
+                               , Variable "y"
+                               ]
+                           )
+            alphaConversion
+                    (Application
+                        [ Abstraction
+                            ( ["x", "y"]
+                            , Abstraction
+                                ( ["x", "y"]
+                                , Application
+                                    [Variable "x", Variable "y", Variable "y"]
+                                )
+                            )
+                        , Variable "y"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                   ( ["x", "y"]
+                                   , Abstraction
+                                       ( ["x_", "y_"]
+                                       , Application
+                                           [ Variable "x_"
+                                           , Variable "y_"
+                                           , Variable "y_"
+                                           ]
+                                       )
+                                   )
+                               , Variable "y"
+                               ]
+                           )
+        it "handles not shared vars"
+            $          alphaConversion
+                           (Application
+                               [ Abstraction
+                                   ( ["x", "y"]
+                                   , Abstraction
+                                       ( ["x", "z"]
+                                       , Application
+                                           [Variable "x", Variable "z", Variable "z"]
+                                       )
+                                   )
+                               , Variable "y"
+                               ]
+                           )
+            `shouldBe` (Application
+                           [ Abstraction
+                               ( ["x", "y"]
+                               , Abstraction
+                                   ( ["z", "x_"]
+                                   , Application
+                                       [ Variable "x_"
+                                       , Variable "z"
+                                       , Variable "z"
+                                       ]
+                                   )
+                               )
+                           , Variable "y"
+                           ]
+                       )
     describe "betaReduction" $ do
         it "reduces correctly" $ do
             betaReduction
-                    (fromString
-                        "((\\f n.ZERO n 1 (* n (f (- n 1)))) ((\\x.FAC (x x)) (\\x.FAC (x x))) 1)"
+                    (Application
+                        [Abstraction (["x"], Variable "x"), Variable "y"]
                     )
-                `shouldBe` fromString
-                               "((\\n.ZERO n 1 (* n ((\\x.FAC (x x)) (\\x.FAC (x x)) (- n 1)))) 1)"
+                `shouldBe` (Application [Abstraction ([], Variable "y")])
+            betaReduction
+                    (Application
+                        [ Abstraction
+                            (["x"], Application [Variable "x", Variable "x"])
+                        , Variable "y"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                     ( []
+                                     , Application [Variable "y", Variable "y"]
+                                     )
+                               ]
+                           )
+            betaReduction
+                    (Application
+                        [ Abstraction
+                            ( ["x"]
+                            , Application
+                                [ Variable "x"
+                                , Application [Variable "x", Variable "x"]
+                                ]
+                            )
+                        , Variable "y"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                     ( []
+                                     , Application
+                                         [ Variable "y"
+                                         , Application
+                                             [Variable "y", Variable "y"]
+                                         ]
+                                     )
+                               ]
+                           )
+            betaReduction
+                    (Application
+                        [ Abstraction
+                            ( ["x"]
+                            , Application
+                                [ Variable "x"
+                                , Application [Variable "x", Variable "x"]
+                                ]
+                            )
+                        , Application [Variable "y", Variable "z"]
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                     ( []
+                                     , Application
+                                         [ Application
+                                             [Variable "y", Variable "z"]
+                                         , Application
+                                             [ Application
+                                                 [Variable "y", Variable "z"]
+                                             , Application
+                                                 [Variable "y", Variable "z"]
+                                             ]
+                                         ]
+                                     )
+                               ]
+                           )
+        it "ignores nested same var abstractions" $ do
+            betaReduction
+                    (Application
+                        [ Abstraction (["x"], Abstraction (["x"], Variable "x"))
+                        , Variable "y"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                     ([], Abstraction (["x"], Variable "x"))
+                               ]
+                           )
+            betaReduction
+                    (Application
+                        [ Abstraction
+                            ( ["x"]
+                            , Application
+                                [ Abstraction (["x"], Variable "x")
+                                , Variable "x"
+                                ]
+                            )
+                        , Variable "y"
+                        ]
+                    )
+                `shouldBe` (Application
+                               [ Abstraction
+                                     ( []
+                                     , Application
+                                         [ Abstraction (["x"], Variable "x")
+                                         , Variable "y"
+                                         ]
+                                     )
+                               ]
+                           )
     describe "eval" $ do
         it "performs correct step" $ do
             1 `shouldBe` 1
