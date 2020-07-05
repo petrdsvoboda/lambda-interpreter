@@ -28,22 +28,6 @@ macros = Macro.macroHeap
 
 spec :: Spec
 spec = do
-    describe "macroExpansion" $ do
-        it "expands correctly" $ do
-            macroExpansion macros (fromString "1 1")
-                `shouldBe` Right (fromString "(\\s z.s z) 1")
-            macroExpansion macros (fromString "(\\s z.1 z)")
-                `shouldBe` Right (fromString "(\\s z.(\\s z.s z) z)")
-        it "ignores macros that don't need to be evaluated"
-            $ macroExpansion macros (fromString "(\\s z.1 z) (\\s z.s z)")
-            `shouldBe` Right (fromString "(\\s z.1 z) (\\s z.s z)")
-        it "returns nothing if macro not found" $ do
-            macroExpansion macros (fromString "NOTHING")
-                `shouldBe` Left "Error: Can't find macro - NOTHING"
-            macroExpansion macros (fromString "(\\x.x (y NIL))")
-                `shouldBe` Left "Error: Can't find macro - NIL"
-            macroExpansion macros (fromString "A1 A2")
-                `shouldBe` Left "Error: Can't find macro - A1"
     describe "replace" $ do
         it "replaces all selected vars" $ do
             replace "x1" (Variable "x2") (fromString "x1 x")
@@ -81,6 +65,22 @@ spec = do
                 `shouldBe` fromString "(x y z)"
             replace "x1" (Variable "x2") (fromString "(x y (a b c)) (\\f. f f)")
                 `shouldBe` fromString "(x y (a b c)) (\\f. f f)"
+    describe "macroExpansion" $ do
+        it "expands correctly" $ do
+            macroExpansion macros (fromString "1 1")
+                `shouldBe` Right (fromString "(\\s z.s z) 1")
+            macroExpansion macros (fromString "(\\s z.1 z)")
+                `shouldBe` Right (fromString "(\\s z.(\\s z.s z) z)")
+        it "ignores macros that don't need to be evaluated"
+            $ macroExpansion macros (fromString "(\\s z.1 z) (\\s z.s z)")
+            `shouldBe` Right (fromString "(\\s z.1 z) (\\s z.s z)")
+        it "returns nothing if macro not found" $ do
+            macroExpansion macros (fromString "NOTHING")
+                `shouldBe` Left "Error: Can't find macro - NOTHING"
+            macroExpansion macros (fromString "(\\x.x (y NIL))")
+                `shouldBe` Left "Error: Can't find macro - NIL"
+            macroExpansion macros (fromString "A1 A2")
+                `shouldBe` Left "Error: Can't find macro - A1"
     describe "consolidateAbstractions" $ do
         it "consolidates nested abstractions" $ do
             consolidateAbstractions (fromString "(\\x.(\\y.x y))")

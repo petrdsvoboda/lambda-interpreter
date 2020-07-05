@@ -24,6 +24,11 @@ instance {-# OVERLAPPING #-} Show [Token] where
 data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term]
 type Expr = (Term, Maybe String)
 type EvalRes = Either String Term
+data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term}
+
+type Error = String
+type Answer = String
+type ProgramStep = Either Error Answer
 
 instance Show Term where
     show (Variable    v      ) = v

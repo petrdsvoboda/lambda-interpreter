@@ -92,55 +92,46 @@ consolidateApplication term = case term of
 consolidate :: Term -> Term
 consolidate = consolidateApplication . consolidateAbstractions
 
+alphaConversion :: Term -> Term
+alphaConversion term = case term of
+    Abstraction (vs, t)           -> Abstraction (vs, alphaConversion t)
+    Application ts@(a : b : rest) -> case a of
+        Abstraction (vs, t) -> Application (transformed : b : rest)
+          where
+            ids         = toIds b
+            transformed = transform ids a
+        _ -> Application (map (alphaConversion) ts)
+    Application [t] -> Application [alphaConversion t]
+    _               -> term
+  where
+    toIds :: Term -> [String]
+    toIds term = case term of
+        Application ts -> concat $ map toIds ts
+        Variable    t  -> [t]
+        _              -> []
+    transform :: [String] -> Term -> Term
+    transform vars term = case term of
+        Abstraction (vs, t) -> if null shared
+            then term
+            else (Abstraction (notShared ++ map snd mapping, replaced))
+          where
+            shared    = List.intersect vars (List.tail vs)
+            notShared = vs List.\\ shared
+            mapping   = map ((\x -> (x, x ++ "_"))) shared
+            getEl x = Variable $ (Map.fromList mapping) Map.! x
+            replaced = foldl ((\acc x -> replace x (getEl x) acc)) t shared
+        Application ts -> Application (map (transform vars) ts)
+        _              -> term
+
 betaReduction :: Term -> Term
 betaReduction term = case term of
     Abstraction (v, t)            -> Abstraction (v, betaReduction t)
     Application ts@(a : b : rest) -> case a of
-        Abstraction ((v : vs), t) -> Application r
-          where
-            reduced = case b of
-                Application _ -> replace v (Application [b]) t
-                _             -> replace v b t
-            newAbs = Abstraction (vs, reduced)
-            r      = (newAbs : rest)
+        Abstraction ((v : vs), t) -> Application (replaced : rest)
+            where replaced = Abstraction (vs, replace v b t)
         _ -> Application (map (betaReduction) ts)
     Application [t] -> Application [betaReduction t]
     _               -> term
-
-toIds :: Term -> [String]
-toIds term = case term of
-    Application ts -> concat $ map toIds ts
-    Variable    t  -> [t]
-    _              -> []
-
-alphaConversion :: Term -> Term
-alphaConversion term = perform term
-  where
-    perform :: Term -> Term
-    perform term = case term of
-        Abstraction (vs, t)           -> Abstraction (vs, perform t)
-        Application ts@(a : b : rest) -> case a of
-            Abstraction (vs, t) -> Application (transformed : b : rest)
-              where
-                ids         = toIds b
-                transformed = transform ids a
-            _ -> Application (map (perform) ts)
-        Application [t] -> Application [perform t]
-        _               -> term
-      where
-        transform :: [String] -> Term -> Term
-        transform vars term = case term of
-            Abstraction (vs, t) -> if null shared
-                then term
-                else (Abstraction (notShared ++ map snd mapping, replaced))
-              where
-                shared    = List.intersect vars (List.tail vs)
-                notShared = vs List.\\ shared
-                mapping   = map ((\x -> (x, x ++ "_"))) shared
-                getEl x = Variable $ (Map.fromList mapping) Map.! x
-                replaced = foldl ((\acc x -> replace x (getEl x) acc)) t shared
-            Application ts -> Application (map (transform vars) ts)
-            _              -> term
 
 eval :: MacroHeap -> Term -> EvalRes
 eval macros term = case res of

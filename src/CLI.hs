@@ -17,6 +17,7 @@ prompt = do
     hFlush stdout
     getLine
 
+-- | Prints current term and waits for any input
 log :: Term -> IO ()
 log term = do
     putStr $ show term
@@ -24,13 +25,14 @@ log term = do
     getChar
     return ()
 
-answer :: MacroHeap -> Either String String -> IO ()
+-- | Prints term or errors
+answer :: MacroHeap -> ProgramStep -> IO ()
 answer macros res = case res of
     Right x   -> putStrLn $ "< " ++ x
     Left  err -> putStrLn err
 
 
-compute :: ProgramFlags -> MacroHeap -> Term -> IO (Either String String)
+compute :: ProgramFlags -> MacroHeap -> Term -> IO ProgramStep
 compute flags macros term = do
     let evaluated = eval macros term
     case evaluated of
@@ -41,13 +43,23 @@ compute flags macros term = do
                 compute flags macros t
         Left err -> return (Left err)
 
+-- | Runs program loop, saving macros
+-- Uses flags for output
+-- quiet - no intermediate answers
 run :: ProgramFlags -> MacroHeap -> IO ()
 run flags macros = do
     line <- prompt
-    let (term, assignTo) = exprFromString line
-    let macros' = case assignTo of
-            Just x  -> macros ++ [(x, show term, term)]
-            Nothing -> macros
-    res <- compute flags macros' term
-    answer macros' res
-    run flags macros'
+    let input = fromStringChecked line
+    -- | Evaluate user input and provide response
+    case input of
+        Left err -> do
+            putStrLn ("Error: " ++ err)
+            run flags macros
+        Right expr -> do
+            let (term, assignTo) = expr
+            let macros' = case assignTo of -- Save new macro
+                    Just x  -> macros ++ [(x, show term, term)]
+                    Nothing -> macros
+            res <- compute flags macros' term
+            answer macros' res
+            run flags macros'

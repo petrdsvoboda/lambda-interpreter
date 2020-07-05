@@ -40,6 +40,13 @@ expr =
           , Application [Macro "2"]
           ]
       )
+    , ( "(\\x.x y) 1 2"
+      , Application
+          [ Abstraction (["x"], Application [Variable "x", Variable "y"])
+          , Macro "1"
+          , Macro "2"
+          ]
+      )
     ]
 token = map (show . swap) expr
 
@@ -65,7 +72,7 @@ spec = do
         it "handles Empty" $ do
             append Empty x `shouldBe` ap1
             append Empty ap1 `shouldBe` ap1
-    describe "parseStatement" $ do
+    describe "parseVar" $ do
         it "parses var correctly" $ do
             parseVar "x" `shouldBe` Variable "x"
             parseVar "xyz" `shouldBe` Variable "xyz"
@@ -81,11 +88,6 @@ spec = do
             parseVar "X==1" `shouldBe` Macro "X==1"
             parseVar "Y:D" `shouldBe` Macro "Y:D"
             parseVar ":D" `shouldBe` Macro ":D"
-    describe "parseToken" $ do
-        it "parses token correctly" $ do
-            1 `shouldBe` 1
-        it "handles stack correctly" $ do
-            1 `shouldBe` 1
     describe "parseStatement" $ do
         it "parses identifier" $ do
             parseStatement (tokenize "") `shouldBe` toTerm ""
@@ -104,6 +106,15 @@ spec = do
         it "parses complex exxpression"
             $          parseStatement (tokenize "(\\x y.x x y)(\\y.y 1)(2)")
             `shouldBe` toTerm "(\\x y.x x y)(\\y.y 1)(2)"
+    describe "parse" $ do
+        it "parses statement" $ do
+            parse (tokenize "x") `shouldBe` (toTerm "x", Nothing)
+            parse (tokenize "(\\x.x y) 1 2")
+                `shouldBe` (toTerm "(\\x.x y) 1 2", Nothing)
+        it "parses assignment" $ do
+            parse (tokenize "X = x") `shouldBe` (toTerm "x", Just "X")
+            parse (tokenize "X2 = (\\x.x y) 1 2")
+                `shouldBe` (toTerm "(\\x.x y) 1 2", Just "X2")
     describe "toString" $ do
         it "handles existing macro" $ do
             toString macroHeap (Abstraction (["t", "f"], Variable "t"))

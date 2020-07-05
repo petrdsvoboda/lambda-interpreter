@@ -10,6 +10,9 @@ import           CLI
 import           Macro
 import           Types
 
+-- | Run program with defined macros
+-- listen for Ctrl+C
+-- enable quiet mode with -q arg
 main :: IO ()
 main = do
     args <- getArgs

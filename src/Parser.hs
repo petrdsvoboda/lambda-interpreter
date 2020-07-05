@@ -1,9 +1,20 @@
+{-|
+Module      : Parser
+Description : Conversion from sting to tokens
+Copyright   : (c) Petr Svoboda, 2020
+License     : GPL-3
+Maintainer  : svobop51@fit.cvut.cz
+Stability   : experimental
+Portability : POSIX
+
+Manages conversion from tokens to representation of term in lambda calculus
+-}
 module Parser
   ( parse
   , parseVar
   , parseStatement
-  , exprFromString
   , fromString
+  , fromStringChecked
   , toString
   , append
   )
@@ -16,9 +27,8 @@ import           Chars
 import           Types
 import           Lexer
 
-
--- FIXME: parse (x) to Application [Variable "x"] not Variable "x"
-
+-- | Appends to Application preserving structure of appended term
+-- So basically it won't merge applications like the <> operator does
 append :: Term -> Term -> Term
 append t1 t2 = case t1 of
   Application ts -> Application (ts ++ [appended])
@@ -30,20 +40,26 @@ append t1 t2 = case t1 of
     Abstraction _ -> t2
     _             -> Application [t2]
 
+-- | Identifies variable or macro
+-- Variable must have first letter lowercase, the rest are macros
 parseVar :: String -> Term
 parseVar text = if Char.isLower $ head text then Variable text else Macro text
 
-data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term}
-
+-- | Empty item for stack which parser uses
 emptyItem :: StackItem
 emptyItem = StackItem { isFn = False, inFn = False, fnVar = [], term = Empty }
 
+-- | Parses token and manipulates stack
+-- Expands and consolidates stack based on separator tokens
+-- Otherwise creates term on the current level
 parseToken :: Stack.Stack StackItem -> Token -> Stack.Stack StackItem
 parseToken stack token = expand . analyze $ consolidate stack
  where
+  -- | Push new item on stack if begin separator
   expand :: Stack.Stack StackItem -> Stack.Stack StackItem
   expand stack | token == Separator Begin = Stack.push emptyItem stack
                | otherwise                = stack
+  -- | Consolidate 2 top items on stack if end separator
   consolidate :: Stack.Stack StackItem -> Stack.Stack StackItem
   consolidate stack
     | token == Separator End = Stack.push next (Stack.pop (Stack.pop stack))
@@ -51,11 +67,19 @@ parseToken stack token = expand . analyze $ consolidate stack
    where
     StackItem { fnVar = fnVar, term = term } = Stack.top stack
     prev@StackItem { term = termPrev }       = Stack.top (Stack.pop stack)
-    next = case term == Empty of
+    -- | Term is not a function if there are no fn arguments
+    notFn = List.null fnVar
+    -- | merge prev stack item with current (application)
+    next  = case term == Empty of
       True  -> prev
-      False -> case List.null fnVar of
+      False -> case notFn of
         True  -> prev { term = append termPrev term }
         False -> prev { term = append termPrev $ Abstraction (fnVar, term) }
+  -- | Checks phase of item parsing
+  -- 1) if term is fn
+  -- 2) identifying arguments of fn
+  -- 3) ending fn identification
+  -- 4) identifying variables and macros
   analyze :: Stack.Stack StackItem -> Stack.Stack StackItem
   analyze stack = Stack.push stackItem (Stack.pop stack)
    where
@@ -71,36 +95,45 @@ parseToken stack token = expand . analyze $ consolidate stack
         EndFn -> curr { inFn = False }
       _ -> curr
 
+-- | Converts tokens into term
+-- uses stack to save depth context
 parseStatement :: [Token] -> Term
 parseStatement tokens = term
  where
   stack = foldl parseToken (Stack.fromList [emptyItem]) tokens
   StackItem { term = term } = Stack.top stack
 
+-- | Converts tokens into expression
+-- expression keeps track of parsed term
+-- and macro which it is assigned to if tokens contain assignment
 parse :: [Token] -> Expr
 parse tokens = (term, assignTo)
  where
+  -- | second token is assignement keyword
   isAssignment = length tokens > 1 && (tokens !! 1 == (Keyword Assign))
   assignTo     = if not isAssignment
     then Nothing
     else case head tokens of
       Identifier x -> Just x
       _            -> Nothing
+  -- | gets tokens to parse
   tokensStatement = if isAssignment then drop 2 tokens else tokens
   term            = parseStatement tokensStatement
 
-exprFromString :: String -> Expr
-exprFromString = parse . tokenize
-
+-- | Converts string to term (uses tokenize)
 fromString :: String -> Term
 fromString = parseStatement . tokenize
 
-fromStringChecked :: String -> Either String Term
+-- | Converts string to term (uses tokenize)
+-- additionally it validates okens before parsing and returns possible errors
+fromStringChecked :: String -> Either String Expr
 fromStringChecked string = case validate tokens of
   Just err -> Left err
-  Nothing  -> Right $ parseStatement tokens
+  Nothing  -> Right $ parse tokens
   where tokens = tokenize string
 
+-- | Converts term to string
+-- if term is equal to existing macro, reurns macro
 toString :: MacroHeap -> Term -> String
 toString macros term = case List.find (\(_, _, t) -> term == t) macros of
   Just (id, _, _) -> id
