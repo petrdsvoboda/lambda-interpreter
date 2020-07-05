@@ -1,20 +1,44 @@
  {-# LANGUAGE FlexibleInstances #-}
 module Types where
 
+-- | Used to separate block in terms - (, )
 data SeparatorToken = Begin | End deriving (Eq)
+-- | Used to mark keywords in terms - \, ., =
 data KeywordToken = Assign | Fn | EndFn deriving (Eq)
+-- | All possible tokens that can be parsed
 data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken deriving (Eq)
+-- | Contains all macro mappings
+-- (identifier, string version of term, term)
 type MacroHeap = [(String, String, Term)]
 
+-- | Term structure
+-- Empty
+-- Variable
+-- Application
+-- Abstraction
 data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term]
+-- | Identifies assignment
+-- assignment - (term, Just identifier)
+-- no assignment - (term, Nothing)
 type Expr = (Term, Maybe String)
-type EvalRes = Either String Term
-data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term}
-
 type Error = String
+-- | Result of one step of the evaluation
+type EvalRes = Either Error Term
+-- | Saves data of token context
+data StackItem = StackItem {
+    isFn::Bool, -- ^ term is going to be abstraction
+    inFn::Bool, -- ^ pass identifiers as arguments (True) or as variables (False)
+    fnVar::[String], -- ^ abstarction arguments
+    term::Term -- ^ inner term
+}
+
 type Answer = String
+-- | Result of one step in CLI
 type ProgramStep = Either Error Answer
-data ProgramFlags = ProgramFlags { quiet :: Bool }
+-- | Flags that can set to program
+data ProgramFlags = ProgramFlags {
+    quiet :: Bool -- ^ don't show intermediate steps
+}
 
 instance Show Token where
     show (Identifier x  ) = "ID~" ++ x
@@ -39,6 +63,7 @@ instance Show Term where
     show (Application ts) = "(" ++ (unwords $ map show ts) ++ ")"
     show Empty            = ""
 
+-- | Simple equality, ignore single applications
 instance Eq Term where
     (==) Empty         Empty         = True
     (==) (Variable v1) (Variable v2) = v1 == v2
@@ -52,6 +77,7 @@ instance Eq Term where
     (==) (Application [])   (Application []  ) = True
     (==) _                  _                  = False
 
+-- | Merge Applications
 instance Semigroup Term where
     (<>) a                     Empty                 = a
     (<>) Empty                 b                     = b
@@ -67,11 +93,13 @@ instance Monoid Term where
     mappend = (<>)
 
 instance {-# OVERLAPPING #-} Semigroup (Maybe Term) where
+    -- | Return term only if no Nothing
     Nothing <> _       = Nothing
     _       <> Nothing = Nothing
     Just a  <> Just b  = Just (a <> b)
 
 instance {-# OVERLAPPING #-} Semigroup (Either String Term) where
+    -- | Merge errors, don't return term if there is error
     Left err1 <> Left err2 = Left (err1 ++ "\n" ++ err2)
     Left err  <> _         = Left err
     _         <> Left  err = Left err
