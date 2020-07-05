@@ -9,6 +9,16 @@ data KeywordToken = Assign | Fn | EndFn deriving (Eq)
 data Token = Identifier String | Separator SeparatorToken | Keyword KeywordToken deriving (Eq)
 type MacroHeap = [(String, String, Term)]
 
+data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term]
+type Expr = (Term, Maybe String)
+type EvalRes = Either String Term
+data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term}
+
+type Error = String
+type Answer = String
+type ProgramStep = Either Error Answer
+data ProgramFlags = ProgramFlags { quiet :: Bool }
+
 instance Show Token where
     show (Identifier x  ) = "ID~" ++ x
     show (Separator  sep) = case sep of
@@ -20,15 +30,6 @@ instance Show Token where
         EndFn    -> "K."
 instance {-# OVERLAPPING #-} Show [Token] where
     show = foldl (\acc curr -> acc ++ " " ++ show curr) ""
-
-data Term  = Empty | Variable String | Macro String | Abstraction ([String], Term ) | Application [Term]
-type Expr = (Term, Maybe String)
-type EvalRes = Either String Term
-data StackItem = StackItem { isFn::Bool, inFn::Bool, fnVar::[String], term::Term}
-
-type Error = String
-type Answer = String
-type ProgramStep = Either Error Answer
 
 instance Show Term where
     show (Variable    v      ) = v
@@ -143,6 +144,3 @@ instance {-# OVERLAPPING #-} Semigroup (Either String Term) where
 --         (Abstraction (v, t)) -> t >>= f
 
 
-type IndexRange = (Int, Int)
-
-data ProgramFlags = ProgramFlags { quiet :: Bool }

@@ -115,6 +115,26 @@ spec = do
             parse (tokenize "X = x") `shouldBe` (toTerm "x", Just "X")
             parse (tokenize "X2 = (\\x.x y) 1 2")
                 `shouldBe` (toTerm "(\\x.x y) 1 2", Just "X2")
+    describe "smartEq" $ it "variables can have different names" $ do
+        smartEq [] (fromString "(\\x.x)") (fromString "(\\y.y)") `shouldBe` True
+        smartEq [] (fromString "(\\x y.x y)") (fromString "(\\a b.a b)")
+            `shouldBe` True
+        smartEq [] (fromString "(\\x.(\\y.x y))") (fromString "(\\a.(\\b.a b))")
+            `shouldBe` True
+        smartEq []
+                (fromString "(\\x.(\\x y.x y))")
+                (fromString "(\\a.(\\c b.a b))")
+            `shouldBe` False
+        smartEq []
+                (fromString "(\\x y z.(\\x y.x y) (\\x y.x y))")
+                (fromString "(\\a b c.(\\d e.(d e)) (\\x y.(x) (y)))")
+            `shouldBe` True
+        smartEq [] (fromString "(\\s z. s z)") (fromString "(\\x y. x y)")
+            `shouldBe` True
+        smartEq []
+                (fromString "(\\s z. s (s z))")
+                (fromString "(\\x y. x (x y))")
+            `shouldBe` True
     describe "toString" $ do
         it "handles existing macro" $ do
             toString macroHeap (Abstraction (["t", "f"], Variable "t"))

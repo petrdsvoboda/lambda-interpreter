@@ -15,17 +15,23 @@ module Parser
   , parseStatement
   , fromString
   , fromStringChecked
+  , smartEq
   , toString
   , append
   )
 where
 
 import qualified Data.List                     as List
+import           Data.List.Split
 import qualified Data.Char                     as Char
 import qualified Data.Stack                    as Stack
 import           Chars
 import           Types
 import           Lexer
+import           EvaluatorHelpers
+
+import           Debug.Trace
+
 
 -- | Appends to Application preserving structure of appended term
 -- So basically it won't merge applications like the <> operator does
@@ -132,9 +138,43 @@ fromStringChecked string = case validate tokens of
   Nothing  -> Right $ parse tokens
   where tokens = tokenize string
 
+-- | Provides equality check used in the final macro lookup
+-- It ignores variable names and compares structure instead
+smartEq :: [String] -> Term -> Term -> Bool
+smartEq used abs1@(Abstraction (vs1, t1)) abs2@(Abstraction (vs2, t2)) =
+  basic || complex
+ where
+  -- | Normal equality
+  basic       = abs1 == abs2
+  varLen      = length vs1 == length vs2
+  -- | Find specially marked vars
+  markedSplit = map (splitOn "_.") (used ++ vs1 ++ vs2)
+  markedNums =
+    map (\x -> read (x !! 1) :: Int) (filter (\x -> length x > 1) markedSplit)
+  -- | Get the highest number used for special vars
+  markedHighest = if null markedNums then 0 else maximum markedNums
+  -- | New special vars to be used
+  newVs =
+    [ "_." ++ show x | x <- [markedHighest .. (length vs1 + markedHighest)] ]
+  normalizeSingle :: Term -> (String, String) -> Term
+  normalizeSingle t (prev, new) = replace prev (Variable new) t
+  -- | Convert term to use special vars
+  normalize :: Term -> [String] -> Term
+  normalize t vs = foldl normalizeSingle t (zip vs newVs)
+  n1      = normalize t1 vs1
+  n2      = normalize t2 vs2
+  -- | Compare terms with normalized vars
+  complex = varLen && smartEq (used ++ newVs) n1 n2
+smartEq used (Application (t1 : ts1)) (Application (t2 : ts2)) =
+  smartEq used t1 t2 && smartEq used (Application ts1) (Application ts2)
+smartEq used (Application [t1]) t2                 = smartEq used t1 t2
+smartEq used t1                 (Application [t2]) = smartEq used t1 t2
+smartEq used t1                 t2                 = t1 == t2
+
 -- | Converts term to string
 -- if term is equal to existing macro, reurns macro
 toString :: MacroHeap -> Term -> String
-toString macros term = case List.find (\(_, _, t) -> term == t) macros of
-  Just (id, _, _) -> id
-  Nothing         -> show term
+toString macros term =
+  case List.find (\(_, _, t) -> smartEq [] term t) macros of
+    Just (id, _, _) -> id
+    Nothing         -> show term

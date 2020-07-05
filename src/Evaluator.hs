@@ -1,7 +1,6 @@
 module Evaluator
     ( eval
     , macroExpansion
-    , replace
     , alphaConversion
     , betaReduction
     , consolidateApplication
@@ -13,10 +12,9 @@ import           Chars
 import           Types
 import           Parser
 import           Lexer
+import           EvaluatorHelpers
 import qualified Data.Map                      as Map
 import qualified Data.List                     as List
-
-import           Debug.Trace
 
 apply :: (Term -> Term) -> Term -> Term
 apply f term = case term of
@@ -24,14 +22,6 @@ apply f term = case term of
     Application []         -> Application []
     Application (a : rest) -> Application (f a : rest)
     _                      -> term
-
-replace :: String -> Term -> Term -> Term
-replace var with term = case term of
-    Variable x -> if x == var then with else term
-    Abstraction (vs, t) ->
-        if var `elem` vs then term else Abstraction (vs, replace var with t)
-    Application ts -> Application (map (replace var with) ts)
-    _              -> term
 
 macroExpansion :: MacroHeap -> Term -> Either String Term
 macroExpansion macros term = case term of

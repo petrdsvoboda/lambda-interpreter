@@ -9,6 +9,7 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Types
+import           Parser
 
 prop_SemigroupAssociative :: Term -> Term -> Term -> Bool
 prop_SemigroupAssociative x y z = (x <> y) <> z == x <> (y <> z)
@@ -63,14 +64,20 @@ spec = describe "Term" $ do
     it "Show is associative" $ property prop_SemigroupAssociative
     it "Show is monoid (left id)" $ property prop_MonoidLeftId
     it "Show is monoid (right id)" $ property prop_MonoidRightId
-    it "correctly implements Eq" $ do
-        x == x `shouldBe` True
-        m == m `shouldBe` True
-        ap1 == ap1 `shouldBe` True
-        ap1 == x `shouldBe` True
-        x == ap1 `shouldBe` True
-        ap2 == apNested `shouldBe` True
-        eqAb1 == eqAb2 `shouldBe` True
+    context "Eq" $ do
+        it "passes basic tests" $ do
+            x `shouldBe` x
+            m `shouldBe` m
+            ap1 `shouldBe` ap1
+            ap1 `shouldBe` x
+            x `shouldBe` ap1
+            ap2 `shouldBe` apNested
+            eqAb1 `shouldBe` eqAb2
+        it "passes complex tests" $ do
+            fromString "(x y z)" `shouldBe` fromString "(x (y) ((z)))"
+            fromString "(x (y z))" `shouldBe` fromString "(x ((y) ((z))))"
+            fromString "(\\x.(x y) z)(x (y z))"
+                `shouldBe` fromString "(\\x.((x (y)) z))(x ((y) ((z))))"
     it "Eq is Reflexive" $ property prop_EqReflexive
     it "Eq is symmetrical" $ property prop_EqSymmetry
     it "Eq is transitivite" $ property prop_EqTransitivity

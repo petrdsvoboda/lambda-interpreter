@@ -27,6 +27,7 @@ dependencies:
   - hspec
   - hspec-discover
   - QuickCheck
+  - split
 
 library:
   source-dirs: src

@@ -13,10 +13,6 @@ idToValBase :: [(String, String)]
 idToValBase =
   [ ("SUCC" , "(\\x s z.s (x s z))")
   , ("PRED", "(\\x s z.x (\\f g.g (f s)) (\\g.z) (\\u.u))")
-  , ("T"    , "(\\t f.t)")
-  , ("TRUE" , "(\\t f.t)")
-  , ("F"    , "(\\t f.f)")
-  , ("FALSE", "(\\t f.f)")
   , ("AND"  , "(\\x y.x y x)")
   , ("OR"   , "(\\x y.x x y)")
   , ("NOT"  , "(\\p.p T F)")
@@ -30,6 +26,10 @@ idToValBase =
   , ("ZERO" , "(\\n.n (\\x.F)T)")
   , ("Y"    , "(\\f.(\\x.f (x x)) (\\x.f (x x)))")
   , ("FAC"  , "(\\f n.ZERO n 1 (* n (f (- n 1))))")
+  , ("T"    , "(\\t f.t)")
+  , ("TRUE" , "(\\t f.t)")
+  , ("F"    , "(\\t f.f)")
+  , ("FALSE", "(\\t f.f)")
   ]
 
 idToVal :: [(String, String)]
