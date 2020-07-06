@@ -353,4 +353,152 @@ spec = do
                            )
     describe "eval" $ do
         it "performs correct step" $ do
-            1 `shouldBe` 1
+            eval macros (Application [Macro "+", Macro "1", Macro "1"])
+                `shouldBe` Right
+                               (Application
+                                   [ Abstraction
+                                       ( ["x", "y", "s", "z"]
+                                       , Application
+                                           [ Variable "x"
+                                           , Variable "s"
+                                           , Application
+                                               [ Variable "y"
+                                               , Variable "s"
+                                               , Variable "z"
+                                               ]
+                                           ]
+                                       )
+                                   , Macro "1"
+                                   , Macro "1"
+                                   ]
+                               )
+            eval
+                    macros
+                    (Application
+                        [ Abstraction
+                            ( ["x", "y", "s", "z"]
+                            , Application
+                                [ Variable "x"
+                                , Variable "s"
+                                , Application
+                                    [Variable "y", Variable "s", Variable "z"]
+                                ]
+                            )
+                        , Macro "1"
+                        , Macro "1"
+                        ]
+                    )
+                `shouldBe` Right
+                               (Application
+                                   [ Abstraction
+                                       ( ["y", "s", "z"]
+                                       , Application
+                                           [ Macro "1"
+                                           , Variable "s"
+                                           , Application
+                                               [ Variable "y"
+                                               , Variable "s"
+                                               , Variable "z"
+                                               ]
+                                           ]
+                                       )
+                                   , Macro "1"
+                                   ]
+                               )
+            eval macros (Application [Macro "1", Macro "1"]) `shouldBe` Right
+                (Application
+                    [ Abstraction
+                        (["s", "z"], Application [Variable "s", Variable "z"])
+                    , Macro "1"
+                    ]
+                )
+            eval
+                    macros
+                    (Application
+                        [ Abstraction
+                            ( ["s", "z"]
+                            , Application [Variable "s", Variable "z"]
+                            )
+                        , Macro "1"
+                        ]
+                    )
+                `shouldBe` Right
+                               (Application
+                                   [ Abstraction
+                                         ( ["z"]
+                                         , Application [Macro "1", Variable "z"]
+                                         )
+                                   ]
+                               )
+            eval
+                    macros
+                    (Application
+                        [ Abstraction
+                              (["z"], Application [Macro "1", Variable "z"])
+                        ]
+                    )
+                `shouldBe` Right
+                               (Application
+                                   [ Abstraction
+                                         ( ["z"]
+                                         , Application
+                                             [ Abstraction
+                                                 ( ["s", "z"]
+                                                 , Application
+                                                     [ Variable "s"
+                                                     , Variable "z"
+                                                     ]
+                                                 )
+                                             , Variable "z"
+                                             ]
+                                         )
+                                   ]
+                               )
+            eval
+                    macros
+                    (Application
+                        [ Abstraction
+                              ( ["z"]
+                              , Application
+                                  [ Abstraction
+                                      ( ["s", "z"]
+                                      , Application [Variable "s", Variable "z"]
+                                      )
+                                  , Variable "z"
+                                  ]
+                              )
+                        ]
+                    )
+                `shouldBe` Right
+                               (Application
+                                   [ Abstraction
+                                         ( ["z"]
+                                         , Application
+                                             [ Abstraction
+                                                 ( ["s", "z_"]
+                                                 , Application
+                                                     [ Variable "s"
+                                                     , Variable "z_"
+                                                     ]
+                                                 )
+                                             , Variable "z"
+                                             ]
+                                         )
+                                   ]
+                               )
+        it "does nothing if no step available"
+            $          eval
+                           macros
+                           (Abstraction
+                               (["s", "z"], Application [Variable "s", Variable "z"])
+                           )
+            `shouldBe` Right
+                           (Abstraction
+                               ( ["s", "z"]
+                               , Application [Variable "s", Variable "z"]
+                               )
+                           )
+        it "returns error on unidentified macro"
+            $          eval macros (Macro "X")
+            `shouldBe` Left "Error: Can't find macro - X"
+
